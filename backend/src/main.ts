@@ -35,13 +35,26 @@ async function bootstrap() {
     .build();
 
   // Uygulamadaki controller/DTO bilgilerini okuyup OpenAPI JSON üretir.
-  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig, {
+    // SDK/codegen tarafında daha stabil method isimleri üretir.
+    operationIdFactory: (_controllerKey: string, methodKey: string) =>
+      methodKey,
+  });
 
   // Swagger UI'ı /docs altında yayınlar.
   SwaggerModule.setup('docs', app, swaggerDocument, {
+    customSiteTitle: 'Nest CRUD API Docs',
     swaggerOptions: {
       // Sayfa yenilense de UI üzerindeki yetki/ayarları korur.
       persistAuthorization: true,
+      // Uzun süren endpointleri UI'da görünür hale getirir.
+      displayRequestDuration: true,
+      // İlk yüklemede endpoint listesi sade kalsın.
+      docExpansion: 'none',
+      // Endpoint araması için filtre alanını açar.
+      filter: true,
+      tagsSorter: 'alpha',
+      operationsSorter: 'alpha',
     },
   });
 

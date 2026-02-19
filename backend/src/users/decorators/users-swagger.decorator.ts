@@ -1,6 +1,23 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import {
+  ApiBadRequestResponse,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiExtraModels,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiQuery,
+  ApiServiceUnavailableResponse,
+  getSchemaPath,
+} from '@nestjs/swagger';
+import {
+  HttpErrorResponseDto,
+  ValidationErrorResponseDto,
+} from '../../common/dto/http-error-response.dto';
 import { UserSortOption } from '../dto/list-users-query.dto';
+import { UserResponseDto } from '../dto/user-response.dto';
 
 function ApiUserIdParam(description: string) {
   return ApiParam({
@@ -11,23 +28,74 @@ function ApiUserIdParam(description: string) {
   });
 }
 
+function ApiQueryOrBodyValidationError() {
+  return ApiBadRequestResponse({
+    description: 'Istek dogrulanamadi. Gecersiz query ya da body alani var.',
+    type: ValidationErrorResponseDto,
+  });
+}
+
+function ApiPathParamValidationError() {
+  return ApiBadRequestResponse({
+    description: 'Path parametresi dogrulanamadi.',
+    type: HttpErrorResponseDto,
+  });
+}
+
+function ApiPathAndBodyValidationError() {
+  return applyDecorators(
+    ApiExtraModels(HttpErrorResponseDto, ValidationErrorResponseDto),
+    ApiBadRequestResponse({
+      description:
+        'Istek dogrulanamadi. Path parametresi veya body alani gecersiz.',
+      schema: {
+        oneOf: [
+          { $ref: getSchemaPath(HttpErrorResponseDto) },
+          { $ref: getSchemaPath(ValidationErrorResponseDto) },
+        ],
+      },
+    }),
+  );
+}
+
+function ApiEmailConflict() {
+  return ApiConflictResponse({
+    description: 'E-posta zaten kullanimda.',
+    type: HttpErrorResponseDto,
+  });
+}
+
+function ApiDbUnavailable() {
+  return ApiServiceUnavailableResponse({
+    description: 'Veritabani baglantisi su anda kullanilamiyor.',
+    type: HttpErrorResponseDto,
+  });
+}
+
 export function ApiCreateUser() {
   return applyDecorators(
-    ApiOperation({ summary: 'Yeni kullanıcı oluştur' }),
-    ApiResponse({
-      status: 201,
-      description: 'Kullanıcı başarıyla oluşturuldu.',
+    ApiOperation({
+      summary: 'Yeni kullanici olustur',
+      description:
+        'Body uzerindeki alanlar dogrulandiysa yeni bir kullanici acilir.',
     }),
-    ApiResponse({
-      status: 409,
-      description: 'E-posta zaten kullanımda olduğu için kayıt açılamadı.',
+    ApiCreatedResponse({
+      description: 'Kullanici basariyla olusturuldu.',
+      type: UserResponseDto,
     }),
+    ApiQueryOrBodyValidationError(),
+    ApiEmailConflict(),
+    ApiDbUnavailable(),
   );
 }
 
 export function ApiFindAllUsers() {
   return applyDecorators(
-    ApiOperation({ summary: 'Tüm kullanıcıları listele' }),
+    ApiOperation({
+      summary: 'Kullanicilari listele',
+      description:
+        'Sayfalama, metin arama ve siralama parametreleri ile kullanici listesi doner.',
+    }),
     ApiQuery({
       name: 'page',
       required: false,
@@ -53,44 +121,78 @@ export function ApiFindAllUsers() {
       name: 'sort',
       required: false,
       enum: UserSortOption,
+      enumName: 'UserSortOption',
       example: UserSortOption.CreatedAtDesc,
-      description: 'Sıralama biçimi.',
+      description: 'Siralama bicimi.',
     }),
-    ApiResponse({ status: 200, description: 'Kullanıcı listesi döndürüldü.' }),
+    ApiOkResponse({
+      description: 'Kullanici listesi donduruldu.',
+      type: UserResponseDto,
+      isArray: true,
+    }),
+    ApiQueryOrBodyValidationError(),
+    ApiDbUnavailable(),
   );
 }
 
 export function ApiFindOneUser() {
   return applyDecorators(
-    ApiOperation({ summary: 'Tek kullanıcı getir' }),
-    ApiUserIdParam('Detayı istenen kullanıcının ID değeri.'),
-    ApiResponse({ status: 200, description: 'Kullanıcı bulundu.' }),
-    ApiResponse({ status: 404, description: 'Kullanıcı bulunamadı.' }),
+    ApiOperation({
+      summary: 'Tek kullanici getir',
+      description: 'Verilen id ile tek bir kullanici kaydi doner.',
+    }),
+    ApiUserIdParam('Detayi istenen kullanicinin ID degeri.'),
+    ApiOkResponse({
+      description: 'Kullanici bulundu.',
+      type: UserResponseDto,
+    }),
+    ApiPathParamValidationError(),
+    ApiNotFoundResponse({
+      description: 'Kullanici bulunamadi.',
+      type: HttpErrorResponseDto,
+    }),
+    ApiDbUnavailable(),
   );
 }
 
 export function ApiUpdateUser() {
   return applyDecorators(
-    ApiOperation({ summary: 'Kullanıcıyı güncelle' }),
-    ApiUserIdParam('Güncellenecek kullanıcının ID değeri.'),
-    ApiResponse({
-      status: 200,
-      description: 'Kullanıcı başarıyla güncellendi.',
-    }),
-    ApiResponse({ status: 404, description: 'Kullanıcı bulunamadı.' }),
-    ApiResponse({
-      status: 409,
+    ApiOperation({
+      summary: 'Kullaniciyi guncelle',
       description:
-        'E-posta zaten kullanımda olduğu için güncelleme yapılamadı.',
+        'Verilen id ile eslesen kayitta body ile gelen alanlari kismi olarak gunceller.',
     }),
+    ApiUserIdParam('Guncellenecek kullanicinin ID degeri.'),
+    ApiOkResponse({
+      description: 'Kullanici basariyla guncellendi.',
+      type: UserResponseDto,
+    }),
+    ApiPathAndBodyValidationError(),
+    ApiNotFoundResponse({
+      description: 'Kullanici bulunamadi.',
+      type: HttpErrorResponseDto,
+    }),
+    ApiEmailConflict(),
+    ApiDbUnavailable(),
   );
 }
 
 export function ApiRemoveUser() {
   return applyDecorators(
-    ApiOperation({ summary: 'Kullanıcıyı sil' }),
-    ApiUserIdParam('Silinecek kullanıcının ID değeri.'),
-    ApiResponse({ status: 200, description: 'Kullanıcı başarıyla silindi.' }),
-    ApiResponse({ status: 404, description: 'Kullanıcı bulunamadı.' }),
+    ApiOperation({
+      summary: 'Kullaniciyi sil',
+      description: 'Verilen id ile eslesen kullanici kaydini siler.',
+    }),
+    ApiUserIdParam('Silinecek kullanicinin ID degeri.'),
+    ApiOkResponse({
+      description: 'Kullanici basariyla silindi.',
+      type: UserResponseDto,
+    }),
+    ApiPathParamValidationError(),
+    ApiNotFoundResponse({
+      description: 'Kullanici bulunamadi.',
+      type: HttpErrorResponseDto,
+    }),
+    ApiDbUnavailable(),
   );
 }

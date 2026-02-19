@@ -144,18 +144,18 @@ export class UsersService {
   private handlePrismaError(error: unknown): never {
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === 'ECONNREFUSED'
+      error.code === 'P2002'
     ) {
-      throw new ServiceUnavailableException(
-        'Veritabanına bağlanılamadı. PostgreSQL servisinin çalıştığını kontrol et.',
-      );
+      throw new ConflictException('Bu e-posta adresi zaten kullanımda.');
     }
 
     if (
       error instanceof Prisma.PrismaClientKnownRequestError &&
-      error.code === 'P2002'
+      (error.code === 'P2021' || error.code === 'P2022')
     ) {
-      throw new ConflictException('Bu e-posta adresi zaten kullanımda.');
+      throw new ServiceUnavailableException(
+        'Veritabanı şeması hazır değil. `pnpm db:push` veya migration komutlarını çalıştır.',
+      );
     }
 
     if (error instanceof Prisma.PrismaClientInitializationError) {
