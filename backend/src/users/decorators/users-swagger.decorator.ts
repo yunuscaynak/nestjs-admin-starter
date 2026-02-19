@@ -1,5 +1,6 @@
 import { applyDecorators } from '@nestjs/common';
-import { ApiOperation, ApiParam, ApiResponse } from '@nestjs/swagger';
+import { ApiOperation, ApiParam, ApiQuery, ApiResponse } from '@nestjs/swagger';
+import { UserSortOption } from '../dto/list-users-query.dto';
 
 function ApiUserIdParam(description: string) {
   return ApiParam({
@@ -27,6 +28,34 @@ export function ApiCreateUser() {
 export function ApiFindAllUsers() {
   return applyDecorators(
     ApiOperation({ summary: 'Tüm kullanıcıları listele' }),
+    ApiQuery({
+      name: 'page',
+      required: false,
+      type: Number,
+      example: 1,
+      description: 'Sayfa numarası (varsayılan: 1).',
+    }),
+    ApiQuery({
+      name: 'limit',
+      required: false,
+      type: Number,
+      example: 20,
+      description: 'Sayfa başına kayıt sayısı (varsayılan: 20, maksimum: 100).',
+    }),
+    ApiQuery({
+      name: 'q',
+      required: false,
+      type: String,
+      example: 'yunus',
+      description: 'Ad veya e-posta üzerinde metin araması.',
+    }),
+    ApiQuery({
+      name: 'sort',
+      required: false,
+      enum: UserSortOption,
+      example: UserSortOption.CreatedAtDesc,
+      description: 'Sıralama biçimi.',
+    }),
     ApiResponse({ status: 200, description: 'Kullanıcı listesi döndürüldü.' }),
   );
 }

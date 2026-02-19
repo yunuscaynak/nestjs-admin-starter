@@ -7,6 +7,7 @@ import {
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
+import { ListUsersQueryDto, UserSortOption } from './dto/list-users-query.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 export type UserRecord = Prisma.UserGetPayload<Prisma.UserDefaultArgs>;
@@ -27,10 +28,39 @@ export class UsersService {
   }
 
   // READ (list): Tüm kullanıcıları yeni kayıt en üstte olacak şekilde döndürür.
-  async findAll(): Promise<UserRecord[]> {
+  async findAll(query: ListUsersQueryDto): Promise<UserRecord[]> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 20;
+    const sort = query.sort ?? UserSortOption.CreatedAtDesc;
+    const searchQuery = query.q;
+
+    const skip = (page - 1) * limit;
+
+    const where: Prisma.UserWhereInput | undefined = searchQuery
+      ? {
+          OR: [
+            {
+              name: {
+                contains: searchQuery,
+                mode: 'insensitive',
+              },
+            },
+            {
+              email: {
+                contains: searchQuery,
+                mode: 'insensitive',
+              },
+            },
+          ],
+        }
+      : undefined;
+
     try {
       return await this.prisma.user.findMany({
-        orderBy: { id: 'desc' },
+        where,
+        orderBy: this.mapSortToOrderBy(sort),
+        skip,
+        take: limit,
       });
     } catch (error) {
       this.handlePrismaError(error);
@@ -78,6 +108,35 @@ export class UsersService {
       });
     } catch (error) {
       this.handlePrismaError(error);
+    }
+  }
+
+  private mapSortToOrderBy(
+    sort: UserSortOption,
+  ): Prisma.UserOrderByWithRelationInput {
+    switch (sort) {
+      case UserSortOption.IdAsc:
+        return { id: 'asc' };
+      case UserSortOption.IdDesc:
+        return { id: 'desc' };
+      case UserSortOption.NameAsc:
+        return { name: 'asc' };
+      case UserSortOption.NameDesc:
+        return { name: 'desc' };
+      case UserSortOption.EmailAsc:
+        return { email: 'asc' };
+      case UserSortOption.EmailDesc:
+        return { email: 'desc' };
+      case UserSortOption.CreatedAtAsc:
+        return { createdAt: 'asc' };
+      case UserSortOption.CreatedAtDesc:
+        return { createdAt: 'desc' };
+      case UserSortOption.UpdatedAtAsc:
+        return { updatedAt: 'asc' };
+      case UserSortOption.UpdatedAtDesc:
+        return { updatedAt: 'desc' };
+      default:
+        return { createdAt: 'desc' };
     }
   }
 

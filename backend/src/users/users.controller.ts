@@ -7,6 +7,7 @@ import {
   ParseIntPipe,
   Patch,
   Post,
+  Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import {
@@ -17,6 +18,7 @@ import {
   ApiUpdateUser,
 } from './decorators/users-swagger.decorator';
 import { CreateUserDto } from './dto/create-user.dto';
+import { ListUsersQueryDto } from './dto/list-users-query.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { type UserRecord, UsersService } from './users.service';
 
@@ -35,8 +37,8 @@ export class UsersController {
   // GET /users -> tüm kullanıcıları listeler.
   @ApiFindAllUsers()
   @Get()
-  findAll(): Promise<UserRecord[]> {
-    return this.usersService.findAll();
+  findAll(@Query() query: ListUsersQueryDto): Promise<UserRecord[]> {
+    return this.usersService.findAll(query);
   }
 
   // GET /users/:id -> tek kullanıcı detayını getirir.

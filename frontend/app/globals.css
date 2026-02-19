@@ -1,14 +1,14 @@
 @import "tailwindcss";
 
 :root {
-  --bg-start: #f8fafc;
-  --bg-end: #ecfeff;
+  --bg: #f3f5f7;
   --panel: #ffffff;
-  --text: #0f172a;
-  --muted: #475569;
-  --border: #cbd5e1;
-  --primary: #0369a1;
-  --danger: #b91c1c;
+  --line: #d9e0e7;
+  --text: #102030;
+  --muted: #5c6f82;
+  --primary: #0f6f8a;
+  --primary-hover: #0c5c72;
+  --danger: #bb2d3b;
 }
 
 @theme inline {
@@ -18,106 +18,192 @@
   --font-mono: var(--font-geist-mono);
 }
 
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   color: var(--text);
-  background: linear-gradient(145deg, var(--bg-start), var(--bg-end));
+  background: radial-gradient(circle at top, #ffffff, var(--bg));
   font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
 }
 
 .page {
   min-height: 100vh;
-  padding: 1.5rem;
+  padding: 2rem 1rem;
 }
 
-.panel {
-  max-width: 860px;
+.container {
+  max-width: 920px;
   margin: 0 auto;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 18px;
-  padding: 1.2rem;
-  box-shadow: 0 16px 40px -28px rgba(2, 6, 23, 0.55);
+  display: grid;
+  gap: 1rem;
 }
 
-.panel-header h1 {
+.page-header h1 {
   margin: 0;
-  font-size: 1.6rem;
+  font-size: 1.75rem;
 }
 
-.panel-header p {
-  margin-top: 0.4rem;
+.page-header p {
+  margin: 0.35rem 0 0;
   color: var(--muted);
-  font-size: 0.92rem;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 1rem;
+}
+
+.create-card h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
 }
 
 .create-form {
-  margin-top: 1rem;
   display: grid;
+  grid-template-columns: 1fr 1fr auto;
   gap: 0.6rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
-input {
-  border: 1px solid var(--border);
+.toolbar {
+  display: grid;
+  grid-template-columns: 1.7fr 1fr 0.9fr auto auto;
+  gap: 0.6rem;
+}
+
+input,
+select,
+button {
   border-radius: 10px;
-  padding: 0.6rem 0.75rem;
-  color: var(--text);
+  border: 1px solid var(--line);
+  padding: 0.62rem 0.75rem;
+  font: inherit;
+}
+
+input,
+select {
   background: #fff;
+  color: var(--text);
 }
 
 button {
   border: 0;
-  border-radius: 10px;
-  padding: 0.6rem 0.8rem;
-  font-weight: 600;
   background: var(--primary);
   color: #fff;
+  font-weight: 600;
   cursor: pointer;
 }
 
+button:hover {
+  background: var(--primary-hover);
+}
+
 button.ghost {
-  background: #e2e8f0;
-  color: #1e293b;
+  background: #e8edf2;
+  color: #1d3246;
+}
+
+button.ghost:hover {
+  background: #dde5ec;
 }
 
 button.danger {
   background: var(--danger);
 }
 
+button.danger:hover {
+  background: #a72432;
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.list-meta {
+  margin-top: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.list-meta-left {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.chip {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.82rem;
+  color: var(--muted);
+  background: #f7fafc;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .error {
+  margin: 0.75rem 0 0;
   color: var(--danger);
   font-weight: 600;
 }
 
 .list-wrapper {
-  margin-top: 1rem;
+  margin-top: 0.8rem;
   display: grid;
-  gap: 0.75rem;
+  gap: 0.7rem;
+}
+
+.empty-state {
+  margin: 0;
+  color: var(--muted);
 }
 
 .user-card {
-  border: 1px solid var(--border);
+  border: 1px solid var(--line);
   border-radius: 12px;
-  padding: 0.75rem;
-  background: #f8fafc;
+  padding: 0.8rem;
+  background: #fafcfe;
+  display: grid;
+  gap: 0.65rem;
 }
 
-.user-card-top {
+.user-row {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  font-size: 0.86rem;
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.user-main h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.user-main p {
+  margin: 0.25rem 0 0;
   color: var(--muted);
 }
 
-.user-data h3 {
-  margin: 0.5rem 0 0.2rem;
-}
-
-.user-data p {
-  margin: 0 0 0.7rem;
+.user-meta {
+  display: grid;
+  justify-items: end;
+  gap: 0.2rem;
   color: var(--muted);
+  font-size: 0.84rem;
 }
 
 .actions {
@@ -126,21 +212,28 @@ button.danger {
 }
 
 .edit-form {
-  margin-top: 0.7rem;
   display: grid;
-  gap: 0.5rem;
+  gap: 0.55rem;
 }
 
-@media (max-width: 760px) {
+@media (max-width: 800px) {
   .page {
-    padding: 1rem;
-  }
-
-  .panel {
-    padding: 1rem;
+    padding: 1rem 0.75rem;
   }
 
   .create-form {
     grid-template-columns: 1fr;
+  }
+
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .user-row {
+    flex-direction: column;
+  }
+
+  .user-meta {
+    justify-items: start;
   }
 }

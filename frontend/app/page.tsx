@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 type UserRecord = {
   id: number;
@@ -17,6 +17,28 @@ type ApiError = {
   message?: string | string[];
 };
 
+type UserSortOption =
+  | "id:asc"
+  | "id:desc"
+  | "name:asc"
+  | "name:desc"
+  | "email:asc"
+  | "email:desc"
+  | "createdAt:asc"
+  | "createdAt:desc"
+  | "updatedAt:asc"
+  | "updatedAt:desc";
+
+const LIMIT_OPTIONS = [10, 20, 50, 100] as const;
+const SORT_OPTIONS: Array<{ label: string; value: UserSortOption }> = [
+  { label: "En yeni", value: "createdAt:desc" },
+  { label: "En eski", value: "createdAt:asc" },
+  { label: "Ad (A-Z)", value: "name:asc" },
+  { label: "Ad (Z-A)", value: "name:desc" },
+  { label: "E-posta (A-Z)", value: "email:asc" },
+  { label: "E-posta (Z-A)", value: "email:desc" },
+];
+
 async function getErrorMessage(response: Response) {
   try {
     const body = (await response.json()) as ApiError;
@@ -32,28 +54,57 @@ async function getErrorMessage(response: Response) {
   return "Bilinmeyen bir hata oluştu.";
 }
 
+function formatDate(value: string) {
+  return new Date(value).toLocaleString("tr-TR");
+}
+
 export default function Home() {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [hasNextPage, setHasNextPage] = useState(false);
   const [error, setError] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState<number>(20);
+  const [sort, setSort] = useState<UserSortOption>("createdAt:desc");
+  const [searchInput, setSearchInput] = useState("");
+  const [appliedQuery, setAppliedQuery] = useState("");
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
   const [editEmail, setEditEmail] = useState("");
 
-  async function loadUsers() {
+  const listUrl = useMemo(() => {
+    const params = new URLSearchParams({
+      page: String(page),
+      limit: String(limit),
+      sort,
+    });
+    if (appliedQuery) {
+      params.set("q", appliedQuery);
+    }
+    return `${API_BASE_URL}/users?${params.toString()}`;
+  }, [appliedQuery, limit, page, sort]);
+
+  const loadUsers = useCallback(async () => {
     setIsLoading(true);
     setError("");
     try {
-      const response = await fetch(`${API_BASE_URL}/users`, {
+      const response = await fetch(listUrl, {
         cache: "no-store",
       });
       if (!response.ok) {
         throw new Error(await getErrorMessage(response));
       }
       const data = (await response.json()) as UserRecord[];
+
+      if (data.length === 0 && page > 1) {
+        setPage((previousPage) => Math.max(1, previousPage - 1));
+        return;
+      }
+
       setUsers(data);
+      setHasNextPage(data.length === limit);
     } catch (requestError) {
       setError(
         requestError instanceof Error
@@ -63,11 +114,11 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [limit, listUrl, page]);
 
   useEffect(() => {
     void loadUsers();
-  }, []);
+  }, [loadUsers]);
 
   async function handleCreate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -97,6 +148,19 @@ export default function Home() {
     setEditingId(user.id);
     setEditName(user.name);
     setEditEmail(user.email);
+  }
+
+  function handleSearch(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const normalizedQuery = searchInput.trim();
+    setAppliedQuery(normalizedQuery);
+    setPage(1);
+  }
+
+  function clearSearch() {
+    setSearchInput("");
+    setAppliedQuery("");
+    setPage(1);
   }
 
   async function handleUpdate(id: number) {
@@ -140,85 +204,173 @@ export default function Home() {
     }
   }
 
+  const clearDisabled =
+    isLoading || (searchInput.trim().length === 0 && appliedQuery.length === 0);
+
   return (
     <main className="page">
-      <section className="panel">
-        <div className="panel-header">
+      <section className="container">
+        <header className="page-header">
           <h1>Kullanıcı Yönetimi</h1>
-          <p>
-            API: <code>{API_BASE_URL}/users</code>
-          </p>
-        </div>
+        </header>
 
-        <form onSubmit={handleCreate} className="create-form">
-          <input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder="Ad"
-            required
-          />
-          <input
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="E-posta"
-            type="email"
-            required
-          />
-          <button type="submit">Kullanıcı Ekle</button>
-        </form>
+        <section className="card create-card">
+          <h2>Yeni Kullanıcı</h2>
+          <form onSubmit={handleCreate} className="create-form">
+            <input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Ad"
+              required
+            />
+            <input
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder="E-posta"
+              type="email"
+              required
+            />
+            <button type="submit" disabled={isLoading}>
+              Ekle
+            </button>
+          </form>
+        </section>
 
-        {error ? <p className="error">{error}</p> : null}
+        <section className="card list-card">
+          <form onSubmit={handleSearch} className="toolbar">
+            <input
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              placeholder="Ad veya e-posta ara"
+            />
+            <select
+              value={sort}
+              onChange={(event) => {
+                setSort(event.target.value as UserSortOption);
+                setPage(1);
+              }}
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <select
+              value={limit}
+              onChange={(event) => {
+                setLimit(Number(event.target.value));
+                setPage(1);
+              }}
+            >
+              {LIMIT_OPTIONS.map((option) => (
+                <option key={option} value={option}>
+                  {option} / sayfa
+                </option>
+              ))}
+            </select>
+            <button type="submit" disabled={isLoading}>
+              Uygula
+            </button>
+            <button
+              type="button"
+              className="ghost"
+              onClick={clearSearch}
+              disabled={clearDisabled}
+            >
+              Temizle
+            </button>
+          </form>
 
-        <div className="list-wrapper">
-          {isLoading ? <p>Yükleniyor...</p> : null}
-          {!isLoading && users.length === 0 ? (
-            <p>Henüz kullanıcı yok.</p>
-          ) : null}
-          {users.map((user) => (
-            <article key={user.id} className="user-card">
-              <div className="user-card-top">
-                <strong>#{user.id}</strong>
-                <span>{new Date(user.createdAt).toLocaleString("tr-TR")}</span>
-              </div>
+          <div className="list-meta">
+            <div className="list-meta-left">
+              <strong>{isLoading ? "Yükleniyor..." : `${users.length} kayıt`}</strong>
+              {appliedQuery ? <span className="chip">Arama: {appliedQuery}</span> : null}
+            </div>
+            <div className="pagination">
+              <button
+                type="button"
+                className="ghost"
+                onClick={() =>
+                  setPage((previousPage) => Math.max(1, previousPage - 1))
+                }
+                disabled={isLoading || page === 1}
+              >
+                Önceki
+              </button>
+              <span>Sayfa {page}</span>
+              <button
+                type="button"
+                onClick={() => setPage((previousPage) => previousPage + 1)}
+                disabled={isLoading || !hasNextPage}
+              >
+                Sonraki
+              </button>
+            </div>
+          </div>
 
-              {editingId === user.id ? (
-                <div className="edit-form">
-                  <input
-                    value={editName}
-                    onChange={(event) => setEditName(event.target.value)}
-                  />
-                  <input
-                    value={editEmail}
-                    type="email"
-                    onChange={(event) => setEditEmail(event.target.value)}
-                  />
-                  <div className="actions">
-                    <button onClick={() => void handleUpdate(user.id)}>
-                      Kaydet
-                    </button>
-                    <button
-                      className="ghost"
-                      onClick={() => setEditingId(null)}
-                    >
-                      Vazgeç
-                    </button>
+          {error ? <p className="error">{error}</p> : null}
+
+          <div className="list-wrapper">
+            {!isLoading && users.length === 0 ? (
+              <p className="empty-state">Bu filtrelere uygun kullanıcı yok.</p>
+            ) : null}
+            {users.map((user) => (
+              <article key={user.id} className="user-card">
+                {editingId === user.id ? (
+                  <div className="edit-form">
+                    <input
+                      value={editName}
+                      onChange={(event) => setEditName(event.target.value)}
+                    />
+                    <input
+                      value={editEmail}
+                      type="email"
+                      onChange={(event) => setEditEmail(event.target.value)}
+                    />
+                    <div className="actions">
+                      <button type="button" onClick={() => void handleUpdate(user.id)}>
+                        Kaydet
+                      </button>
+                      <button
+                        type="button"
+                        className="ghost"
+                        onClick={() => setEditingId(null)}
+                      >
+                        Vazgeç
+                      </button>
+                    </div>
                   </div>
-                </div>
-              ) : (
-                <div className="user-data">
-                  <h3>{user.name}</h3>
-                  <p>{user.email}</p>
-                  <div className="actions">
-                    <button onClick={() => beginEdit(user)}>Düzenle</button>
-                    <button className="danger" onClick={() => void handleDelete(user.id)}>
-                      Sil
-                    </button>
-                  </div>
-                </div>
-              )}
-            </article>
-          ))}
-        </div>
+                ) : (
+                  <>
+                    <div className="user-row">
+                      <div className="user-main">
+                        <h3>{user.name}</h3>
+                        <p>{user.email}</p>
+                      </div>
+                      <div className="user-meta">
+                        <span>#{user.id}</span>
+                        <time>{formatDate(user.createdAt)}</time>
+                      </div>
+                    </div>
+                    <div className="actions">
+                      <button type="button" onClick={() => beginEdit(user)}>
+                        Düzenle
+                      </button>
+                      <button
+                        type="button"
+                        className="danger"
+                        onClick={() => void handleDelete(user.id)}
+                      >
+                        Sil
+                      </button>
+                    </div>
+                  </>
+                )}
+              </article>
+            ))}
+          </div>
+        </section>
       </section>
     </main>
   );
