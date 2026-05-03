@@ -1,15 +1,18 @@
 import { applyDecorators } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
+  ApiBearerAuth,
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiExtraModels,
+  ApiForbiddenResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
   ApiParam,
   ApiQuery,
   ApiServiceUnavailableResponse,
+  ApiUnauthorizedResponse,
   getSchemaPath,
 } from '@nestjs/swagger';
 import {
@@ -22,8 +25,8 @@ import { UserResponseDto } from '../dto/user-response.dto';
 function ApiUserIdParam(description: string) {
   return ApiParam({
     name: 'id',
-    type: Number,
-    example: 1,
+    type: String,
+    example: 'cmab12cd30000xyz123456789',
     description,
   });
 }
@@ -72,8 +75,23 @@ function ApiDbUnavailable() {
   });
 }
 
+function ApiAdminAuth() {
+  return applyDecorators(
+    ApiBearerAuth('bearer'),
+    ApiUnauthorizedResponse({
+      description: 'Bearer token eksik veya gecersiz.',
+      type: HttpErrorResponseDto,
+    }),
+    ApiForbiddenResponse({
+      description: 'Bu endpoint sadece admin kullanicilar icin aciktir.',
+      type: HttpErrorResponseDto,
+    }),
+  );
+}
+
 export function ApiCreateUser() {
   return applyDecorators(
+    ApiAdminAuth(),
     ApiOperation({
       summary: 'Yeni kullanici olustur',
       description:
@@ -91,6 +109,7 @@ export function ApiCreateUser() {
 
 export function ApiFindAllUsers() {
   return applyDecorators(
+    ApiAdminAuth(),
     ApiOperation({
       summary: 'Kullanicilari listele',
       description:
@@ -137,6 +156,7 @@ export function ApiFindAllUsers() {
 
 export function ApiFindOneUser() {
   return applyDecorators(
+    ApiAdminAuth(),
     ApiOperation({
       summary: 'Tek kullanici getir',
       description: 'Verilen id ile tek bir kullanici kaydi doner.',
@@ -157,6 +177,7 @@ export function ApiFindOneUser() {
 
 export function ApiUpdateUser() {
   return applyDecorators(
+    ApiAdminAuth(),
     ApiOperation({
       summary: 'Kullaniciyi guncelle',
       description:
@@ -179,6 +200,7 @@ export function ApiUpdateUser() {
 
 export function ApiRemoveUser() {
   return applyDecorators(
+    ApiAdminAuth(),
     ApiOperation({
       summary: 'Kullaniciyi sil',
       description: 'Verilen id ile eslesen kullanici kaydini siler.',

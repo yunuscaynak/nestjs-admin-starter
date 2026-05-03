@@ -4,15 +4,29 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
+import { hashPassword } from '../auth/auth.utils';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersQueryDto, UserSortOption } from './dto/list-users-query.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
-export type UserRecord = Prisma.UserGetPayload<Prisma.UserDefaultArgs>;
+export const PUBLIC_USER_SELECT = Prisma.validator<Prisma.UserSelect>()({
+  id: true,
+  firstName: true,
+  lastName: true,
+  email: true,
+  role: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type PublicUserRecord = Prisma.UserGetPayload<{
+  select: typeof PUBLIC_USER_SELECT;
+}>;
+
 export type UsersListResponse = {
-  items: UserRecord[];
+  items: PublicUserRecord[];
   meta: {
     page: number;
     pageSize: number;
@@ -26,10 +40,17 @@ export class UsersService {
   constructor(private readonly prisma: PrismaService) {}
 
   // CREATE: Gelen DTO'dan yeni kullanıcı kaydı açar.
-  async create(createUserDto: CreateUserDto): Promise<UserRecord> {
+  async create(createUserDto: CreateUserDto): Promise<PublicUserRecord> {
     try {
       return await this.prisma.user.create({
-        data: createUserDto,
+        data: {
+          firstName: createUserDto.firstName,
+          lastName: createUserDto.lastName,
+          email: createUserDto.email,
+          passwordHash: await hashPassword(createUserDto.password),
+          role: createUserDto.role ?? Role.USER,
+        },
+        select: PUBLIC_USER_SELECT,
       });
     } catch (error) {
       this.handlePrismaError(error);
@@ -74,6 +95,7 @@ export class UsersService {
           orderBy: this.mapSortToOrderBy(sort),
           skip,
           take: limit,
+          select: PUBLIC_USER_SELECT,
         }),
         this.prisma.user.count({ where }),
       ]);
@@ -93,10 +115,11 @@ export class UsersService {
   }
 
   // READ (single): ID ile tek kullanıcı bulur, yoksa 404 verir.
-  async findOne(id: string): Promise<UserRecord> {
+  async findOne(id: string): Promise<PublicUserRecord> {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id },
+        select: PUBLIC_USER_SELECT,
       });
 
       if (!user) {
@@ -110,13 +133,22 @@ export class UsersService {
   }
 
   // UPDATE: Önce kaydın varlığını doğrular, sonra sadece gelen alanları günceller.
-  async update(id: string, updateUserDto: UpdateUserDto): Promise<UserRecord> {
+  async update(
+    id: string,
+    updateUserDto: UpdateUserDto,
+  ): Promise<PublicUserRecord> {
     await this.findOne(id);
 
     try {
+      const { password, ...rest } = updateUserDto;
+
       return await this.prisma.user.update({
         where: { id },
-        data: updateUserDto,
+        data: {
+          ...rest,
+          ...(password ? { passwordHash: await hashPassword(password) } : {}),
+        },
+        select: PUBLIC_USER_SELECT,
       });
     } catch (error) {
       this.handlePrismaError(error);
@@ -124,12 +156,13 @@ export class UsersService {
   }
 
   // DELETE: Silmeden önce kaydı kontrol eder; böylece anlamlı 404 dönebiliriz.
-  async remove(id: string): Promise<UserRecord> {
+  async remove(id: string): Promise<PublicUserRecord> {
     await this.findOne(id);
 
     try {
       return await this.prisma.user.delete({
         where: { id },
+        select: PUBLIC_USER_SELECT,
       });
     } catch (error) {
       this.handlePrismaError(error);

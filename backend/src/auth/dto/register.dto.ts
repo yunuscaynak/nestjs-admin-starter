@@ -1,23 +1,15 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Role } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
   IsEmail,
-  IsEnum,
   IsNotEmpty,
-  IsOptional,
   IsString,
   MaxLength,
   MinLength,
 } from 'class-validator';
 
-export class CreateUserDto {
-  @ApiProperty({
-    example: 'Yunus',
-    description: 'Kullanıcının adı.',
-    minLength: 2,
-    maxLength: 80,
-  })
+export class RegisterDto {
+  @ApiProperty({ example: 'Yunus', description: 'Kullanicinin adi.' })
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim() : value,
   )
@@ -27,12 +19,7 @@ export class CreateUserDto {
   @MaxLength(80)
   firstName: string;
 
-  @ApiProperty({
-    example: 'Çaynak',
-    description: 'Kullanıcının soyadı.',
-    minLength: 2,
-    maxLength: 80,
-  })
+  @ApiProperty({ example: 'Caynak', description: 'Kullanicinin soyadi.' })
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim() : value,
   )
@@ -43,36 +30,24 @@ export class CreateUserDto {
   lastName: string;
 
   @ApiProperty({
-    example: 'yunus@example.com',
-    description: 'Kullanıcıya ait benzersiz e-posta adresi.',
-    maxLength: 254,
+    example: 'admin@example.com',
+    description: 'Kullanicinin e-posta adresi.',
   })
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim().toLowerCase() : value,
   )
+  @IsEmail()
   @IsNotEmpty()
   @MaxLength(254)
-  @IsEmail()
   email: string;
 
   @ApiProperty({
     example: 'Admin123!',
-    description: 'Kullanicinin ilk giris sifresi.',
+    description: 'Kullanicinin sifresi.',
     minLength: 8,
-    maxLength: 128,
   })
   @IsNotEmpty()
   @MinLength(8)
   @MaxLength(128)
   password: string;
-
-  @ApiProperty({
-    enum: Role,
-    example: Role.USER,
-    description: 'Kullanicinin sistem rolu.',
-    required: false,
-  })
-  @IsOptional()
-  @IsEnum(Role)
-  role?: Role;
 }

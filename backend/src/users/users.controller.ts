@@ -9,6 +9,8 @@ import {
   Query,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Role } from '@prisma/client';
+import { Roles } from '../auth/decorators/roles.decorator';
 import {
   ApiCreateUser,
   ApiFindAllUsers,
@@ -20,12 +22,13 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersQueryDto } from './dto/list-users-query.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import {
-  type UserRecord,
+  type PublicUserRecord,
   type UsersListResponse,
   UsersService,
 } from './users.service';
 
 @ApiTags('users')
+@Roles(Role.ADMIN)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -33,7 +36,7 @@ export class UsersController {
   // POST /users -> yeni kullanıcı oluşturur.
   @ApiCreateUser()
   @Post()
-  create(@Body() createUserDto: CreateUserDto): Promise<UserRecord> {
+  create(@Body() createUserDto: CreateUserDto): Promise<PublicUserRecord> {
     return this.usersService.create(createUserDto);
   }
 
@@ -47,7 +50,7 @@ export class UsersController {
   // GET /users/:id -> tek kullanıcı detayını getirir.
   @ApiFindOneUser()
   @Get(':id')
-  findOne(@Param('id') id: string): Promise<UserRecord> {
+  findOne(@Param('id') id: string): Promise<PublicUserRecord> {
     return this.usersService.findOne(id);
   }
 
@@ -57,14 +60,14 @@ export class UsersController {
   update(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
-  ): Promise<UserRecord> {
+  ): Promise<PublicUserRecord> {
     return this.usersService.update(id, updateUserDto);
   }
 
   // DELETE /users/:id -> kullanıcıyı siler.
   @ApiRemoveUser()
   @Delete(':id')
-  remove(@Param('id') id: string): Promise<UserRecord> {
+  remove(@Param('id') id: string): Promise<PublicUserRecord> {
     return this.usersService.remove(id);
   }
 }

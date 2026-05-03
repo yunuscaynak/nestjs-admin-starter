@@ -1,7 +1,9 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
+import { Role } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
@@ -56,4 +58,24 @@ export class UpdateUserDto {
   @MaxLength(254)
   @IsEmail()
   email?: string;
+
+  @ApiPropertyOptional({
+    example: 'Admin123!',
+    description: 'Kullanicinin yeni sifresi.',
+    minLength: 8,
+    maxLength: 128,
+  })
+  @IsOptional()
+  @MinLength(8)
+  @MaxLength(128)
+  password?: string;
+
+  @ApiPropertyOptional({
+    enum: Role,
+    example: Role.ADMIN,
+    description: 'Kullanicinin yeni rolu.',
+  })
+  @IsOptional()
+  @IsEnum(Role)
+  role?: Role;
 }

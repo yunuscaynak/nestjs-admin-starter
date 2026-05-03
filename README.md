@@ -7,10 +7,12 @@ Basit bir full-stack kullanıcı CRUD projesi.
 
 ## Özellikler
 
-- Kullanıcı oluşturma, listeleme, tek kayıt getirme, güncelleme, silme
+- Login / register endpoint'leri
+- JWT tabanlı kimlik doğrulama
+- Admin korumalı kullanıcı oluşturma, listeleme, tek kayıt getirme, güncelleme, silme
 - Swagger dokümantasyonu (`/docs`)
 - Prisma ile SQLite bağlantısı
-- Basit frontend CRUD arayüzü
+- Login ekranı ve admin paneli içeren frontend arayüzü
 - API prefix: `/api`
 
 ## Proje Yapısı
@@ -106,11 +108,21 @@ pnpm db:studio
 ## API Uçları
 
 - `GET /`
+- `POST /api/auth/register`
+- `POST /api/auth/login`
+- `GET /api/auth/me`
 - `GET /api/users`
 - `POST /api/users`
 - `GET /api/users/:id`
 - `PATCH /api/users/:id`
 - `DELETE /api/users/:id`
+
+## Auth Notları
+
+- Sistemde parola set edilmiş ilk hesap `ADMIN` rolüyle oluşturulur.
+- `users` endpoint'leri sadece `ADMIN` rolündeki kullanıcılar için açıktır.
+- Eski veritabanında auth öncesinden kalan kullanıcı kayıtları varsa bu kayıtların `passwordHash` alanı boş olabilir; bu kullanıcılar doğrudan login olamaz.
+- Böyle bir durumda yeni bir hesap açarsan, sistemde daha önce parola set edilmiş kullanıcı yoksa bu yeni hesap otomatik olarak `ADMIN` olur.
 
 ## Sık Karşılaşılan Hatalar
 

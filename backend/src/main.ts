@@ -29,9 +29,19 @@ async function bootstrap() {
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Nest CRUD API')
     .setDescription(
-      'NestJS + Prisma ile yazılmış kullanıcı CRUD endpoint dokümantasyonu.',
+      'NestJS + Prisma ile yazilmis auth ve kullanici yonetimi endpoint dokumantasyonu.',
     )
     .setVersion('1.0.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        description: 'Authorization: Bearer <token>',
+      },
+      'bearer',
+    )
+    .addTag('auth', 'Kimlik dogrulama islemleri')
     .addTag('users', 'Kullanıcı CRUD işlemleri')
     .build();
 

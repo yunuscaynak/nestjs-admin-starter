@@ -14,8 +14,8 @@
 @theme inline {
   --color-background: var(--panel);
   --color-foreground: var(--text);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: "Avenir Next", "Segoe UI", sans-serif;
+  --font-mono: "SFMono-Regular", "Menlo", monospace;
 }
 
 * {
@@ -26,12 +26,37 @@ body {
   margin: 0;
   color: var(--text);
   background: radial-gradient(circle at top, #ffffff, var(--bg));
-  font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
 }
 
 .page {
   min-height: 100vh;
   padding: 2rem 1rem;
+}
+
+.auth-page {
+  background:
+    radial-gradient(circle at top left, rgba(15, 111, 138, 0.14), transparent 30%),
+    linear-gradient(180deg, #eef6fb 0%, #f3f5f7 100%);
+}
+
+.dashboard-page {
+  background:
+    radial-gradient(circle at top right, rgba(15, 111, 138, 0.12), transparent 25%),
+    radial-gradient(circle at bottom left, rgba(16, 32, 48, 0.08), transparent 30%),
+    #f3f5f7;
+}
+
+.shell {
+  max-width: 1120px;
+  margin: 0 auto;
+}
+
+.auth-shell {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 1rem;
+  align-items: stretch;
 }
 
 .container {
@@ -56,6 +81,145 @@ body {
   border: 1px solid var(--line);
   border-radius: 14px;
   padding: 1rem;
+  box-shadow: 0 18px 50px rgba(16, 32, 48, 0.06);
+}
+
+.hero-panel {
+  background: linear-gradient(135deg, #102030 0%, #17455a 58%, #0f6f8a 100%);
+  color: #f7fbff;
+  border-radius: 24px;
+  padding: 2rem;
+  min-height: 420px;
+  display: grid;
+  align-content: center;
+  gap: 1rem;
+}
+
+.eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+.hero-panel .eyebrow {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.hero-panel h1,
+.auth-card h1,
+.dashboard-header h1 {
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  line-height: 1;
+}
+
+.hero-copy,
+.header-copy {
+  margin: 0;
+  color: rgba(247, 251, 255, 0.85);
+  max-width: 42rem;
+}
+
+.header-copy {
+  color: var(--muted);
+}
+
+.hero-points {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.auth-card {
+  border-radius: 24px;
+  padding: 1.2rem;
+  align-self: center;
+}
+
+.auth-tabs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.tab {
+  background: #e9eff5;
+  color: var(--text);
+}
+
+.tab.active {
+  background: var(--text);
+  color: #fff;
+}
+
+.auth-form {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.password-field {
+  position: relative;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 3.3rem;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.45rem;
+  transform: translateY(-50%);
+  border: 1px solid var(--line);
+  background: #f4f7fa;
+  color: var(--text);
+  width: 2.35rem;
+  height: 2.35rem;
+  padding: 0;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+}
+
+.password-toggle:hover {
+  background: #e7edf3;
+}
+
+.password-toggle-icon {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.button-label {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.button-icon {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+.dashboard-shell {
+  display: grid;
+  gap: 1rem;
+}
+
+.dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: end;
+}
+
+.expanded {
+  grid-template-columns: repeat(5, minmax(0, 1fr)) auto;
 }
 
 .create-card h2 {
@@ -149,6 +313,11 @@ button:disabled {
   background: #f7fafc;
 }
 
+.role-chip {
+  font-weight: 700;
+  color: var(--primary);
+}
+
 .pagination {
   display: flex;
   align-items: center;
@@ -221,7 +390,20 @@ button:disabled {
     padding: 1rem 0.75rem;
   }
 
+  .auth-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard-header {
+    flex-direction: column;
+    align-items: start;
+  }
+
   .create-form {
+    grid-template-columns: 1fr;
+  }
+
+  .expanded {
     grid-template-columns: 1fr;
   }
 
