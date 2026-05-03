@@ -43,8 +43,20 @@ type UsersResponse = {
 
 type AuthResponse = {
   accessToken: string;
+  refreshToken: string;
+  accessTokenExpiresAt: string;
+  refreshTokenExpiresAt: string;
+  rememberMe: boolean;
   role: Role;
   user: UserRecord;
+};
+
+type StoredSession = {
+  accessToken: string;
+  refreshToken: string;
+  accessTokenExpiresAt: string;
+  refreshTokenExpiresAt: string;
+  rememberMe: boolean;
 };
 
 type ApiError = {
@@ -65,7 +77,7 @@ type UserSortOption =
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3002/api";
-const TOKEN_STORAGE_KEY = "nest-crud-token";
+const SESSION_STORAGE_KEY = "nest-crud-session";
 const LIMIT_OPTIONS = [10, 20, 50, 100] as const;
 const SORT_OPTIONS: Array<{ label: string; value: UserSortOption }> = [
   { label: "En yeni", value: "createdAt:desc" },
@@ -98,6 +110,26 @@ function formatDate(value: string) {
 
 function getFullName(user: UserRecord) {
   return `${user.firstName} ${user.lastName}`;
+}
+
+function getStorage(rememberMe: boolean) {
+  return rememberMe ? window.localStorage : window.sessionStorage;
+}
+
+function readStoredSession(): StoredSession | null {
+  const raw =
+    window.localStorage.getItem(SESSION_STORAGE_KEY) ??
+    window.sessionStorage.getItem(SESSION_STORAGE_KEY);
+
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return JSON.parse(raw) as StoredSession;
+  } catch {
+    return null;
+  }
 }
 
 function ButtonLabel({
@@ -158,6 +190,7 @@ function PasswordField({
 export default function Home() {
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [refreshToken, setRefreshToken] = useState<string | null>(null);
   const [currentUser, setCurrentUser] = useState<UserRecord | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
@@ -166,6 +199,7 @@ export default function Home() {
   const [authLastName, setAuthLastName] = useState("");
   const [authEmail, setAuthEmail] = useState("");
   const [authPassword, setAuthPassword] = useState("");
+  const [authRememberMe, setAuthRememberMe] = useState(true);
   const [showAuthPassword, setShowAuthPassword] = useState(false);
 
   const [users, setUsers] = useState<UserRecord[]>([]);
@@ -209,14 +243,31 @@ export default function Home() {
   }, [appliedQuery, limit, page, sort]);
 
   const persistSession = useCallback((payload: AuthResponse) => {
-    localStorage.setItem(TOKEN_STORAGE_KEY, payload.accessToken);
+    const session: StoredSession = {
+      accessToken: payload.accessToken,
+      refreshToken: payload.refreshToken,
+      accessTokenExpiresAt: payload.accessTokenExpiresAt,
+      refreshTokenExpiresAt: payload.refreshTokenExpiresAt,
+      rememberMe: payload.rememberMe,
+    };
+
+    window.localStorage.removeItem(SESSION_STORAGE_KEY);
+    window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
+    getStorage(payload.rememberMe).setItem(
+      SESSION_STORAGE_KEY,
+      JSON.stringify(session),
+    );
+
     setSessionToken(payload.accessToken);
+    setRefreshToken(payload.refreshToken);
     setCurrentUser(payload.user);
   }, []);
 
   const clearSession = useCallback(() => {
-    localStorage.removeItem(TOKEN_STORAGE_KEY);
+    window.localStorage.removeItem(SESSION_STORAGE_KEY);
+    window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
     setSessionToken(null);
+    setRefreshToken(null);
     setCurrentUser(null);
     setUsers([]);
     setTotalUsers(0);
@@ -244,22 +295,89 @@ export default function Home() {
     [],
   );
 
-  useEffect(() => {
-    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+  const refreshSession = useCallback(
+    async (token: string) => {
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ refreshToken: token }),
+      });
 
-    if (!token) {
+      if (!response.ok) {
+        throw new Error(await getErrorMessage(response));
+      }
+
+      const data = (await response.json()) as AuthResponse;
+      persistSession(data);
+
+      return data;
+    },
+    [persistSession],
+  );
+
+  useEffect(() => {
+    const storedSession = readStoredSession();
+
+    if (!storedSession) {
       setAuthLoading(false);
       return;
     }
 
-    void fetchMe(token)
-      .catch(() => {
-        clearSession();
+    void fetchMe(storedSession.accessToken)
+      .catch(async () => {
+        try {
+          const refreshedSession = await refreshSession(
+            storedSession.refreshToken,
+          );
+          await fetchMe(refreshedSession.accessToken);
+        } catch {
+          clearSession();
+        }
       })
       .finally(() => {
         setAuthLoading(false);
       });
-  }, [clearSession, fetchMe]);
+  }, [clearSession, fetchMe, refreshSession]);
+
+  const authorizedFetch = useCallback(
+    async (input: string, init?: RequestInit): Promise<Response> => {
+      if (!sessionToken) {
+        throw new Error("Oturum bulunamadi.");
+      }
+
+      const requestInit: RequestInit = {
+        ...init,
+        headers: {
+          ...(init?.headers ?? {}),
+          Authorization: `Bearer ${sessionToken}`,
+        },
+      };
+
+      let response = await fetch(input, requestInit);
+
+      if (response.status !== 401 || !refreshToken) {
+        return response;
+      }
+
+      try {
+        const refreshedSession = await refreshSession(refreshToken);
+        response = await fetch(input, {
+          ...init,
+          headers: {
+            ...(init?.headers ?? {}),
+            Authorization: `Bearer ${refreshedSession.accessToken}`,
+          },
+        });
+        return response;
+      } catch {
+        clearSession();
+        throw new Error("Oturum suresi doldu. Tekrar giris yapin.");
+      }
+    },
+    [clearSession, refreshSession, refreshToken, sessionToken],
+  );
 
   const loadUsers = useCallback(async () => {
     if (!sessionToken || !isAdmin) {
@@ -270,17 +388,9 @@ export default function Home() {
     setUsersError("");
 
     try {
-      const response = await fetch(listUrl, {
+      const response = await authorizedFetch(listUrl, {
         cache: "no-store",
-        headers: {
-          Authorization: `Bearer ${sessionToken}`,
-        },
       });
-
-      if (response.status === 401) {
-        clearSession();
-        throw new Error("Oturum gecersiz. Tekrar giris yapin.");
-      }
 
       if (!response.ok) {
         throw new Error(await getErrorMessage(response));
@@ -308,7 +418,7 @@ export default function Home() {
     } finally {
       setIsLoadingUsers(false);
     }
-  }, [clearSession, isAdmin, listUrl, page, sessionToken]);
+  }, [authorizedFetch, isAdmin, listUrl, page, sessionToken]);
 
   useEffect(() => {
     if (!authLoading && isAdmin) {
@@ -332,12 +442,21 @@ export default function Home() {
               lastName: authLastName,
               email: authEmail,
               password: authPassword,
+              rememberMe: authRememberMe,
             };
+      const requestPayload =
+        authMode === "login"
+          ? {
+              email: authEmail,
+              password: authPassword,
+              rememberMe: authRememberMe,
+            }
+          : payload;
 
       const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(requestPayload),
       });
 
       if (!response.ok) {
@@ -369,11 +488,10 @@ export default function Home() {
     setUsersError("");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/users`, {
+      const response = await authorizedFetch(`${API_BASE_URL}/users`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionToken}`,
         },
         body: JSON.stringify({ firstName, lastName, email, password, role }),
       });
@@ -428,11 +546,10 @@ export default function Home() {
     setUsersError("");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/users/${id}`, {
+      const response = await authorizedFetch(`${API_BASE_URL}/users/${id}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${sessionToken}`,
         },
         body: JSON.stringify({
           firstName: editFirstName,
@@ -466,11 +583,8 @@ export default function Home() {
     setUsersError("");
 
     try {
-      const response = await fetch(`${API_BASE_URL}/users/${id}`, {
+      const response = await authorizedFetch(`${API_BASE_URL}/users/${id}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${sessionToken}`,
-        },
       });
 
       if (!response.ok) {
@@ -490,6 +604,28 @@ export default function Home() {
   const clearDisabled =
     isLoadingUsers ||
     (searchInput.trim().length === 0 && appliedQuery.length === 0);
+
+  async function handleLogout() {
+    const currentRefreshToken = refreshToken;
+
+    clearSession();
+
+    if (!currentRefreshToken) {
+      return;
+    }
+
+    try {
+      await fetch(`${API_BASE_URL}/auth/logout`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ refreshToken: currentRefreshToken }),
+      });
+    } catch {
+      // Cikis UX'ini bloklamamak icin hata yutulur.
+    }
+  }
 
   if (authLoading) {
     return (
@@ -579,6 +715,14 @@ export default function Home() {
                 onToggle={() => setShowAuthPassword((current) => !current)}
                 required
               />
+              <label className="checkbox-field">
+                <input
+                  checked={authRememberMe}
+                  onChange={(event) => setAuthRememberMe(event.target.checked)}
+                  type="checkbox"
+                />
+                <span>Beni hatirla</span>
+              </label>
 
               <button type="submit" disabled={isSubmittingAuth}>
                 {isSubmittingAuth
@@ -607,7 +751,7 @@ export default function Home() {
               {currentUser.email} · Rol: <strong>{currentUser.role}</strong>
             </p>
           </div>
-          <button type="button" className="ghost" onClick={clearSession}>
+          <button type="button" className="ghost" onClick={() => void handleLogout()}>
             <ButtonLabel icon={faArrowRightFromBracket}>Cikis Yap</ButtonLabel>
           </button>
         </header>

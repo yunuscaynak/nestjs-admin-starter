@@ -7,8 +7,9 @@ Basit bir full-stack kullanıcı CRUD projesi.
 
 ## Özellikler
 
-- Login / register endpoint'leri
-- JWT tabanlı kimlik doğrulama
+- Login / register / refresh / logout endpoint'leri
+- Access + refresh token tabanli kimlik dogrulama
+- Remember me secenegi ile kalici oturum
 - Admin korumalı kullanıcı oluşturma, listeleme, tek kayıt getirme, güncelleme, silme
 - Swagger dokümantasyonu (`/docs`)
 - Prisma ile SQLite bağlantısı
@@ -110,6 +111,8 @@ pnpm db:studio
 - `GET /`
 - `POST /api/auth/register`
 - `POST /api/auth/login`
+- `POST /api/auth/refresh`
+- `POST /api/auth/logout`
 - `GET /api/auth/me`
 - `GET /api/users`
 - `POST /api/users`
@@ -121,6 +124,9 @@ pnpm db:studio
 
 - Sistemde parola set edilmiş ilk hesap `ADMIN` rolüyle oluşturulur.
 - `users` endpoint'leri sadece `ADMIN` rolündeki kullanıcılar için açıktır.
+- Access token kisa omurludur; frontend gerekirse refresh token ile oturumu otomatik yeniler.
+- `remember me` seciliyse refresh token daha uzun omurlu uretilir ve oturum `localStorage` tarafinda tutulur.
+- `remember me` kapaliysa oturum `sessionStorage` tarafinda tutulur; tarayici sekmesi kapaninca temizlenir.
 - Eski veritabanında auth öncesinden kalan kullanıcı kayıtları varsa bu kayıtların `passwordHash` alanı boş olabilir; bu kullanıcılar doğrudan login olamaz.
 - Böyle bir durumda yeni bir hesap açarsan, sistemde daha önce parola set edilmiş kullanıcı yoksa bu yeni hesap otomatik olarak `ADMIN` olur.
 

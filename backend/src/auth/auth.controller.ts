@@ -16,6 +16,7 @@ import { Public } from './decorators/public.decorator';
 import type { AuthenticatedUser } from './auth.types';
 import { AuthResponseDto } from './dto/auth-response.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 
 @ApiTags('auth')
@@ -58,6 +59,43 @@ export class AuthController {
   @Post('login')
   login(@Body() loginDto: LoginDto): Promise<AuthResponse> {
     return this.authService.login(loginDto);
+  }
+
+  @Public()
+  @ApiOperation({
+    summary: 'Oturumu yenile',
+    description:
+      'Gecerli refresh token ile yeni access/refresh token ciftini dondurur.',
+  })
+  @ApiOkResponse({
+    description: 'Oturum basariyla yenilendi.',
+    type: AuthResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Refresh token gecersiz veya suresi dolmus.',
+    type: HttpErrorResponseDto,
+  })
+  @Post('refresh')
+  refresh(@Body() refreshTokenDto: RefreshTokenDto): Promise<AuthResponse> {
+    return this.authService.refresh(refreshTokenDto);
+  }
+
+  @Public()
+  @ApiOperation({
+    summary: 'Guvneli cikis yap',
+    description: 'Refresh token veritabaninda gecersiz kilinir.',
+  })
+  @ApiOkResponse({
+    description: 'Oturum basariyla kapatildi.',
+    schema: {
+      example: {
+        success: true,
+      },
+    },
+  })
+  @Post('logout')
+  logout(@Body() refreshTokenDto: RefreshTokenDto): Promise<{ success: true }> {
+    return this.authService.logout(refreshTokenDto);
   }
 
   @ApiBearerAuth('bearer')

@@ -1,6 +1,13 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsEmail, IsNotEmpty, MaxLength, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsEmail,
+  IsNotEmpty,
+  IsOptional,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
 export class LoginDto {
   @ApiProperty({
@@ -24,4 +31,14 @@ export class LoginDto {
   @MinLength(8)
   @MaxLength(128)
   password: string;
+
+  @ApiProperty({
+    example: true,
+    description:
+      'Secilirse uzun omurlu refresh token uretilir ve oturum kalici saklanir.',
+    required: false,
+  })
+  @IsOptional()
+  @IsBoolean()
+  rememberMe?: boolean;
 }
