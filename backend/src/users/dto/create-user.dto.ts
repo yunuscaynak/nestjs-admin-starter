@@ -11,7 +11,7 @@ import {
 export class CreateUserDto {
   @ApiProperty({
     example: 'Yunus',
-    description: 'Kullanıcının görünen adı.',
+    description: 'Kullanıcının adı.',
     minLength: 2,
     maxLength: 80,
   })
@@ -22,7 +22,22 @@ export class CreateUserDto {
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(80)
-  name: string;
+  firstName: string;
+
+  @ApiProperty({
+    example: 'Çaynak',
+    description: 'Kullanıcının soyadı.',
+    minLength: 2,
+    maxLength: 80,
+  })
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(2)
+  @MaxLength(80)
+  lastName: string;
 
   @ApiProperty({
     example: 'yunus@example.com',

@@ -14,8 +14,8 @@ import { ApiPropertyOptional } from '@nestjs/swagger';
 export enum UserSortOption {
   IdAsc = 'id:asc',
   IdDesc = 'id:desc',
-  NameAsc = 'name:asc',
-  NameDesc = 'name:desc',
+  NameAsc = 'firstName:asc',
+  NameDesc = 'firstName:desc',
   EmailAsc = 'email:asc',
   EmailDesc = 'email:desc',
   CreatedAtAsc = 'createdAt:asc',
@@ -55,7 +55,7 @@ export class ListUsersQueryDto {
     example: 'yunus',
     minLength: 1,
     maxLength: 100,
-    description: 'Ad veya e-posta üzerinde metin araması.',
+    description: 'Ad, soyad veya e-posta üzerinde metin araması.',
   })
   @IsOptional()
   @Transform(({ value }: { value: unknown }) => {

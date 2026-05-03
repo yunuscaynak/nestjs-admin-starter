@@ -1,16 +1,17 @@
-# Nest CRUD (NestJS + Prisma + PostgreSQL + Next.js)
+# Nest CRUD (NestJS + Prisma + SQLite + Next.js)
 
 Basit bir full-stack kullanıcı CRUD projesi.
 
-- Backend: NestJS + Prisma + PostgreSQL
+- Backend: NestJS + Prisma + SQLite
 - Frontend: Next.js (App Router)
 
 ## Özellikler
 
 - Kullanıcı oluşturma, listeleme, tek kayıt getirme, güncelleme, silme
 - Swagger dokümantasyonu (`/docs`)
-- Prisma ile PostgreSQL bağlantısı
+- Prisma ile SQLite bağlantısı
 - Basit frontend CRUD arayüzü
+- API prefix: `/api`
 
 ## Proje Yapısı
 
@@ -25,18 +26,10 @@ nest-crud/
 - Node.js 20+
 - pnpm (backend için)
 - npm (frontend için)
-- Docker Desktop (PostgreSQL için)
 
 ## Hızlı Başlangıç
 
-### 1) PostgreSQL'i başlat
-
-```bash
-cd backend
-docker compose up -d
-```
-
-### 2) Backend'i kur ve veritabanını hazırla
+### 1) Backend'i kur ve veritabanını hazırla
 
 ```bash
 cd backend
@@ -46,10 +39,11 @@ pnpm db:push
 pnpm start:dev
 ```
 
-Backend varsayılan: `http://localhost:3000`  
-Swagger: `http://localhost:3000/docs`
+Backend varsayılan: `http://localhost:3002`  
+API: `http://localhost:3002/api`  
+Swagger: `http://localhost:3002/docs`
 
-### 3) Frontend'i çalıştır
+### 2) Frontend'i çalıştır
 
 ```bash
 cd frontend
@@ -64,7 +58,37 @@ Frontend: `http://localhost:3001`
 `backend/.env`:
 
 ```env
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/nestcrud?schema=public"
+DATABASE_URL="file:./dev.db"
+PORT=3002
+SWAGGER_PATH=docs
+```
+
+İstersen frontend için API adresini override edebilirsin:
+
+`frontend/.env.local`
+
+```env
+NEXT_PUBLIC_API_BASE_URL=http://localhost:3002/api
+```
+
+## Makefile Kullanımı
+
+Kök dizinden:
+
+```bash
+make install
+make db-generate
+make db-push
+make backend
+make frontend
+```
+
+Backend klasörü içinden:
+
+```bash
+make install
+make setup
+make backend
 ```
 
 ## Backend Scriptleri
@@ -79,33 +103,45 @@ pnpm db:migrate
 pnpm db:studio
 ```
 
+## API Uçları
+
+- `GET /`
+- `GET /api/users`
+- `POST /api/users`
+- `GET /api/users/:id`
+- `PATCH /api/users/:id`
+- `DELETE /api/users/:id`
+
 ## Sık Karşılaşılan Hatalar
 
-### `EADDRINUSE: address already in use :::3000`
+### `EADDRINUSE: address already in use :::3002`
 
-3000 portu doludur.
+3002 portu doludur.
 
 ```bash
-lsof -nP -iTCP:3000 -sTCP:LISTEN
+lsof -nP -iTCP:3002 -sTCP:LISTEN
 kill <PID>
 ```
 
-### `Database "nestcrud" does not exist`
+### `Cannot GET /api/users`
 
-Veritabanı oluşturulmamıştır. Önce compose ile Postgres'i başlat, sonra:
+Backend çalışıyor olabilir ama API prefix eksik sürüm ayağa kalkmış olabilir. Güncel backend koduyla:
+
+```bash
+cd backend
+pnpm start:dev
+```
+
+ve `http://localhost:3002/api/users` adresini kontrol et.
+
+### `The table main.User does not exist`
+
+SQLite şeması henüz oluşturulmamıştır:
 
 ```bash
 cd backend
 pnpm db:push
 ```
-
-### `ECONNREFUSED` / `Service Unavailable`
-
-PostgreSQL ayakta değildir veya bağlantı URL'i yanlıştır.
-
-- Docker Desktop'ın açık olduğundan emin ol
-- `docker compose up -d` çalıştır
-- `backend/.env` içindeki `DATABASE_URL` değerini kontrol et
 
 ## Lisans
 

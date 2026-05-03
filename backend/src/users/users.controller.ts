@@ -4,7 +4,6 @@ import {
   Delete,
   Get,
   Param,
-  ParseIntPipe,
   Patch,
   Post,
   Query,
@@ -20,7 +19,11 @@ import {
 import { CreateUserDto } from './dto/create-user.dto';
 import { ListUsersQueryDto } from './dto/list-users-query.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { type UserRecord, UsersService } from './users.service';
+import {
+  type UserRecord,
+  type UsersListResponse,
+  UsersService,
+} from './users.service';
 
 @ApiTags('users')
 @Controller('users')
@@ -37,14 +40,14 @@ export class UsersController {
   // GET /users -> tüm kullanıcıları listeler.
   @ApiFindAllUsers()
   @Get()
-  findAll(@Query() query: ListUsersQueryDto): Promise<UserRecord[]> {
+  findAll(@Query() query: ListUsersQueryDto): Promise<UsersListResponse> {
     return this.usersService.findAll(query);
   }
 
   // GET /users/:id -> tek kullanıcı detayını getirir.
   @ApiFindOneUser()
   @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number): Promise<UserRecord> {
+  findOne(@Param('id') id: string): Promise<UserRecord> {
     return this.usersService.findOne(id);
   }
 
@@ -52,7 +55,7 @@ export class UsersController {
   @ApiUpdateUser()
   @Patch(':id')
   update(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
   ): Promise<UserRecord> {
     return this.usersService.update(id, updateUserDto);
@@ -61,7 +64,7 @@ export class UsersController {
   // DELETE /users/:id -> kullanıcıyı siler.
   @ApiRemoveUser()
   @Delete(':id')
-  remove(@Param('id', ParseIntPipe) id: number): Promise<UserRecord> {
+  remove(@Param('id') id: string): Promise<UserRecord> {
     return this.usersService.remove(id);
   }
 }

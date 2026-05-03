@@ -11,6 +11,15 @@ import { ListUsersQueryDto, UserSortOption } from './dto/list-users-query.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 export type UserRecord = Prisma.UserGetPayload<Prisma.UserDefaultArgs>;
+export type UsersListResponse = {
+  items: UserRecord[];
+  meta: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+};
 
 @Injectable()
 export class UsersService {
@@ -28,7 +37,7 @@ export class UsersService {
   }
 
   // READ (list): Tüm kullanıcıları yeni kayıt en üstte olacak şekilde döndürür.
-  async findAll(query: ListUsersQueryDto): Promise<UserRecord[]> {
+  async findAll(query: ListUsersQueryDto): Promise<UsersListResponse> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const sort = query.sort ?? UserSortOption.CreatedAtDesc;
@@ -40,15 +49,18 @@ export class UsersService {
       ? {
           OR: [
             {
-              name: {
+              firstName: {
                 contains: searchQuery,
-                mode: 'insensitive',
+              },
+            },
+            {
+              lastName: {
+                contains: searchQuery,
               },
             },
             {
               email: {
                 contains: searchQuery,
-                mode: 'insensitive',
               },
             },
           ],
@@ -56,19 +68,32 @@ export class UsersService {
       : undefined;
 
     try {
-      return await this.prisma.user.findMany({
-        where,
-        orderBy: this.mapSortToOrderBy(sort),
-        skip,
-        take: limit,
-      });
+      const [items, total] = await this.prisma.$transaction([
+        this.prisma.user.findMany({
+          where,
+          orderBy: this.mapSortToOrderBy(sort),
+          skip,
+          take: limit,
+        }),
+        this.prisma.user.count({ where }),
+      ]);
+
+      return {
+        items,
+        meta: {
+          page,
+          pageSize: limit,
+          total,
+          totalPages: Math.ceil(total / limit),
+        },
+      };
     } catch (error) {
       this.handlePrismaError(error);
     }
   }
 
   // READ (single): ID ile tek kullanıcı bulur, yoksa 404 verir.
-  async findOne(id: number): Promise<UserRecord> {
+  async findOne(id: string): Promise<UserRecord> {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id },
@@ -85,7 +110,7 @@ export class UsersService {
   }
 
   // UPDATE: Önce kaydın varlığını doğrular, sonra sadece gelen alanları günceller.
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<UserRecord> {
+  async update(id: string, updateUserDto: UpdateUserDto): Promise<UserRecord> {
     await this.findOne(id);
 
     try {
@@ -99,7 +124,7 @@ export class UsersService {
   }
 
   // DELETE: Silmeden önce kaydı kontrol eder; böylece anlamlı 404 dönebiliriz.
-  async remove(id: number): Promise<UserRecord> {
+  async remove(id: string): Promise<UserRecord> {
     await this.findOne(id);
 
     try {
@@ -120,9 +145,9 @@ export class UsersService {
       case UserSortOption.IdDesc:
         return { id: 'desc' };
       case UserSortOption.NameAsc:
-        return { name: 'asc' };
+        return { firstName: 'asc' };
       case UserSortOption.NameDesc:
-        return { name: 'desc' };
+        return { firstName: 'desc' };
       case UserSortOption.EmailAsc:
         return { email: 'asc' };
       case UserSortOption.EmailDesc:
@@ -160,13 +185,13 @@ export class UsersService {
 
     if (error instanceof Prisma.PrismaClientInitializationError) {
       throw new ServiceUnavailableException(
-        'Veritabanı başlatılamadı. DATABASE_URL ve PostgreSQL durumunu kontrol et.',
+        'Veritabanı başlatılamadı. DATABASE_URL ayarını kontrol et.',
       );
     }
 
     if (error instanceof Error && error.message.includes('ECONNREFUSED')) {
       throw new ServiceUnavailableException(
-        'Veritabanına bağlanılamadı. PostgreSQL servisinin çalıştığını kontrol et.',
+        'Veritabanına bağlanılamadı. Prisma bağlantı ayarlarını kontrol et.',
       );
     }
 

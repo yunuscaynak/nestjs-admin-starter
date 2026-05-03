@@ -12,7 +12,7 @@ import {
 // PATCH isteğinde her alan opsiyonel olmalı; gelen alanlar doğrulanır.
 export class UpdateUserDto {
   @ApiPropertyOptional({
-    example: 'Yunus Can',
+    example: 'Yunus',
     description: 'Kullanıcının güncellenecek adı.',
     minLength: 2,
     maxLength: 80,
@@ -25,7 +25,23 @@ export class UpdateUserDto {
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(80)
-  name?: string;
+  firstName?: string;
+
+  @ApiPropertyOptional({
+    example: 'Çaynak',
+    description: 'Kullanıcının güncellenecek soyadı.',
+    minLength: 2,
+    maxLength: 80,
+  })
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(2)
+  @MaxLength(80)
+  lastName?: string;
 
   @ApiPropertyOptional({
     example: 'yunuscan@example.com',

@@ -6,19 +6,16 @@ FRONTEND_DIR := frontend
 PNPM ?= pnpm
 NPM ?= npm
 
-BACKEND_PORT ?= 3000
+BACKEND_PORT ?= 3002
 FRONTEND_PORT ?= 3001
 
 .DEFAULT_GOAL := help
 
-.PHONY: help install install-backend install-frontend db-up db-down db-logs db-generate db-push db-migrate db-studio backend backend-prod frontend build lint test dev dev-backend dev-frontend
+.PHONY: help install install-backend install-frontend db-generate db-push db-migrate db-studio backend backend-prod frontend build lint test dev dev-backend dev-frontend
 
 help:
 	@echo "Available targets:"
 	@echo "  make install           - Install backend and frontend dependencies"
-	@echo "  make db-up             - Start PostgreSQL with Docker Compose"
-	@echo "  make db-down           - Stop PostgreSQL container"
-	@echo "  make db-logs           - Show PostgreSQL logs"
 	@echo "  make db-generate       - Generate Prisma client"
 	@echo "  make db-push           - Push Prisma schema to DB"
 	@echo "  make db-migrate        - Run Prisma migration (name=init)"
@@ -37,15 +34,6 @@ install-backend:
 
 install-frontend:
 	cd $(FRONTEND_DIR) && $(NPM) install
-
-db-up:
-	cd $(BACKEND_DIR) && docker compose up -d
-
-db-down:
-	cd $(BACKEND_DIR) && docker compose down
-
-db-logs:
-	cd $(BACKEND_DIR) && docker compose logs -f postgres
 
 db-generate:
 	cd $(BACKEND_DIR) && $(PNPM) db:generate

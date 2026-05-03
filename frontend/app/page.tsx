@@ -3,15 +3,23 @@
 import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
 
 type UserRecord = {
-  id: number;
-  name: string;
+  id: string;
+  firstName: string;
+  lastName: string;
   email: string;
   createdAt: string;
   updatedAt: string;
 };
 
-const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3000";
+type UsersResponse = {
+  items: UserRecord[];
+  meta: {
+    page: number;
+    pageSize: number;
+    total: number;
+    totalPages: number;
+  };
+};
 
 type ApiError = {
   message?: string | string[];
@@ -20,8 +28,8 @@ type ApiError = {
 type UserSortOption =
   | "id:asc"
   | "id:desc"
-  | "name:asc"
-  | "name:desc"
+  | "firstName:asc"
+  | "firstName:desc"
   | "email:asc"
   | "email:desc"
   | "createdAt:asc"
@@ -29,12 +37,14 @@ type UserSortOption =
   | "updatedAt:asc"
   | "updatedAt:desc";
 
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:3002/api";
 const LIMIT_OPTIONS = [10, 20, 50, 100] as const;
 const SORT_OPTIONS: Array<{ label: string; value: UserSortOption }> = [
   { label: "En yeni", value: "createdAt:desc" },
   { label: "En eski", value: "createdAt:asc" },
-  { label: "Ad (A-Z)", value: "name:asc" },
-  { label: "Ad (Z-A)", value: "name:desc" },
+  { label: "Ad (A-Z)", value: "firstName:asc" },
+  { label: "Ad (Z-A)", value: "firstName:desc" },
   { label: "E-posta (A-Z)", value: "email:asc" },
   { label: "E-posta (Z-A)", value: "email:desc" },
 ];
@@ -58,21 +68,28 @@ function formatDate(value: string) {
   return new Date(value).toLocaleString("tr-TR");
 }
 
+function getFullName(user: UserRecord) {
+  return `${user.firstName} ${user.lastName}`;
+}
+
 export default function Home() {
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [error, setError] = useState("");
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState<number>(20);
   const [sort, setSort] = useState<UserSortOption>("createdAt:desc");
   const [searchInput, setSearchInput] = useState("");
   const [appliedQuery, setAppliedQuery] = useState("");
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editName, setEditName] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
   const [editEmail, setEditEmail] = useState("");
+  const [totalUsers, setTotalUsers] = useState(0);
 
   const listUrl = useMemo(() => {
     const params = new URLSearchParams({
@@ -96,25 +113,30 @@ export default function Home() {
       if (!response.ok) {
         throw new Error(await getErrorMessage(response));
       }
-      const data = (await response.json()) as UserRecord[];
 
-      if (data.length === 0 && page > 1) {
+      const data = (await response.json()) as UsersResponse;
+
+      if (data.items.length === 0 && page > 1) {
         setPage((previousPage) => Math.max(1, previousPage - 1));
         return;
       }
 
-      setUsers(data);
-      setHasNextPage(data.length === limit);
+      setUsers(data.items);
+      setTotalUsers(data.meta.total);
+      setHasNextPage(page < data.meta.totalPages);
     } catch (requestError) {
       setError(
         requestError instanceof Error
           ? requestError.message
           : "Kullanıcılar alınamadı.",
       );
+      setUsers([]);
+      setTotalUsers(0);
+      setHasNextPage(false);
     } finally {
       setIsLoading(false);
     }
-  }, [limit, listUrl, page]);
+  }, [listUrl, page]);
 
   useEffect(() => {
     void loadUsers();
@@ -127,12 +149,13 @@ export default function Home() {
       const response = await fetch(`${API_BASE_URL}/users`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email }),
+        body: JSON.stringify({ firstName, lastName, email }),
       });
       if (!response.ok) {
         throw new Error(await getErrorMessage(response));
       }
-      setName("");
+      setFirstName("");
+      setLastName("");
       setEmail("");
       await loadUsers();
     } catch (requestError) {
@@ -146,14 +169,14 @@ export default function Home() {
 
   function beginEdit(user: UserRecord) {
     setEditingId(user.id);
-    setEditName(user.name);
+    setEditFirstName(user.firstName);
+    setEditLastName(user.lastName);
     setEditEmail(user.email);
   }
 
   function handleSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const normalizedQuery = searchInput.trim();
-    setAppliedQuery(normalizedQuery);
+    setAppliedQuery(searchInput.trim());
     setPage(1);
   }
 
@@ -163,13 +186,17 @@ export default function Home() {
     setPage(1);
   }
 
-  async function handleUpdate(id: number) {
+  async function handleUpdate(id: string) {
     setError("");
     try {
       const response = await fetch(`${API_BASE_URL}/users/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: editName, email: editEmail }),
+        body: JSON.stringify({
+          firstName: editFirstName,
+          lastName: editLastName,
+          email: editEmail,
+        }),
       });
       if (!response.ok) {
         throw new Error(await getErrorMessage(response));
@@ -185,7 +212,7 @@ export default function Home() {
     }
   }
 
-  async function handleDelete(id: number) {
+  async function handleDelete(id: string) {
     setError("");
     try {
       const response = await fetch(`${API_BASE_URL}/users/${id}`, {
@@ -218,9 +245,15 @@ export default function Home() {
           <h2>Yeni Kullanıcı</h2>
           <form onSubmit={handleCreate} className="create-form">
             <input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
+              value={firstName}
+              onChange={(event) => setFirstName(event.target.value)}
               placeholder="Ad"
+              required
+            />
+            <input
+              value={lastName}
+              onChange={(event) => setLastName(event.target.value)}
+              placeholder="Soyad"
               required
             />
             <input
@@ -284,8 +317,10 @@ export default function Home() {
 
           <div className="list-meta">
             <div className="list-meta-left">
-              <strong>{isLoading ? "Yükleniyor..." : `${users.length} kayıt`}</strong>
-              {appliedQuery ? <span className="chip">Arama: {appliedQuery}</span> : null}
+              <strong>{isLoading ? "Yükleniyor..." : `${totalUsers} kayıt`}</strong>
+              {appliedQuery ? (
+                <span className="chip">Arama: {appliedQuery}</span>
+              ) : null}
             </div>
             <div className="pagination">
               <button
@@ -320,8 +355,12 @@ export default function Home() {
                 {editingId === user.id ? (
                   <div className="edit-form">
                     <input
-                      value={editName}
-                      onChange={(event) => setEditName(event.target.value)}
+                      value={editFirstName}
+                      onChange={(event) => setEditFirstName(event.target.value)}
+                    />
+                    <input
+                      value={editLastName}
+                      onChange={(event) => setEditLastName(event.target.value)}
                     />
                     <input
                       value={editEmail}
@@ -345,11 +384,11 @@ export default function Home() {
                   <>
                     <div className="user-row">
                       <div className="user-main">
-                        <h3>{user.name}</h3>
+                        <h3>{getFullName(user)}</h3>
                         <p>{user.email}</p>
                       </div>
                       <div className="user-meta">
-                        <span>#{user.id}</span>
+                        <span>#{user.id.slice(0, 8)}</span>
                         <time>{formatDate(user.createdAt)}</time>
                       </div>
                     </div>
