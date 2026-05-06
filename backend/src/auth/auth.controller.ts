@@ -82,7 +82,7 @@ export class AuthController {
 
   @Public()
   @ApiOperation({
-    summary: 'Guvneli cikis yap',
+    summary: 'Guvenli cikis yap',
     description: 'Refresh token veritabaninda gecersiz kilinir.',
   })
   @ApiOkResponse({
