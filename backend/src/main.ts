@@ -42,6 +42,7 @@ async function bootstrap() {
       'bearer',
     )
     .addTag('auth', 'Kimlik dogrulama islemleri')
+    .addTag('posts', 'Post CRUD islemleri')
     .addTag('users', 'Kullanıcı CRUD işlemleri')
     .build();
 
