@@ -114,6 +114,11 @@ pnpm db:studio
 - `POST /api/auth/refresh`
 - `POST /api/auth/logout`
 - `GET /api/auth/me`
+- `GET /api/posts`
+- `POST /api/posts`
+- `GET /api/posts/:id`
+- `PATCH /api/posts/:id`
+- `DELETE /api/posts/:id`
 - `GET /api/users`
 - `POST /api/users`
 - `GET /api/users/:id`
