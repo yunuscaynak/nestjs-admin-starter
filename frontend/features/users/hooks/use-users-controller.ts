@@ -1,19 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
-import type { ApiClient } from "@/features/shared/services/api-client";
+import { useCallback, useEffect, useState } from "react";
+import type { HttpClient } from "@/features/shared/services/http-client";
 import type {
-  Role,
   UserRecord,
-  UserSortOption,
-} from "@/features/shared/lib/types";
+} from "@/features/users/types";
 import {
   createUser,
   deleteUser,
   listUserAuthorOptions,
   listUsers,
   updateUser,
-} from "../services/api";
+} from "../services/user-service";
+import { useUserFilters } from "./use-user-filters";
+import { useUserFormState } from "./use-user-form-state";
 
 export function useUsersController({
   isAdmin,
@@ -22,44 +22,18 @@ export function useUsersController({
 }: {
   isAdmin: boolean;
   sessionToken: string | null;
-  apiClient: ApiClient;
+  apiClient: HttpClient;
 }) {
   const [items, setItems] = useState<UserRecord[]>([]);
   const [authorOptions, setAuthorOptions] = useState<UserRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [error, setError] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showCreatePassword, setShowCreatePassword] = useState(false);
-  const [role, setRole] = useState<Role>("USER");
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState<number>(20);
-  const [sort, setSort] = useState<UserSortOption>("createdAt:desc");
-  const [searchInput, setSearchInput] = useState("");
-  const [appliedQuery, setAppliedQuery] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editFirstName, setEditFirstName] = useState("");
-  const [editLastName, setEditLastName] = useState("");
-  const [editEmail, setEditEmail] = useState("");
-  const [editPassword, setEditPassword] = useState("");
-  const [showEditPassword, setShowEditPassword] = useState(false);
-  const [editRole, setEditRole] = useState<Role>("USER");
   const [total, setTotal] = useState(0);
-
-  const listQuery = useMemo(
-    () => ({
-      page,
-      limit,
-      sort,
-      q: appliedQuery || undefined,
-    }),
-    [appliedQuery, limit, page, sort],
-  );
+  const filters = useUserFilters();
+  const formState = useUserFormState();
+  const { page, setPage, limit, sort, filterDrawerOpen, listQuery } = filters;
 
   const loadUsers = useCallback(async () => {
     if (!sessionToken || !isAdmin) {
@@ -92,7 +66,7 @@ export function useUsersController({
     } finally {
       setLoading(false);
     }
-  }, [apiClient, isAdmin, listQuery, page, sessionToken]);
+  }, [apiClient, isAdmin, listQuery, page, sessionToken, setPage]);
 
   const loadAuthorOptions = useCallback(async () => {
     if (!sessionToken || !isAdmin) {
@@ -116,25 +90,6 @@ export function useUsersController({
     void loadAuthorOptions();
   }, [isAdmin, loadAuthorOptions, loadUsers]);
 
-  function resetCreateForm() {
-    setFirstName("");
-    setLastName("");
-    setEmail("");
-    setPassword("");
-    setShowCreatePassword(false);
-    setRole("USER");
-  }
-
-  function resetEditForm() {
-    setEditingId(null);
-    setEditFirstName("");
-    setEditLastName("");
-    setEditEmail("");
-    setEditPassword("");
-    setShowEditPassword(false);
-    setEditRole("USER");
-  }
-
   async function handleCreateUser(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!sessionToken) {
@@ -145,14 +100,14 @@ export function useUsersController({
 
     try {
       await createUser(apiClient, {
-        firstName,
-        lastName,
-        email,
-        password,
-        role,
+        firstName: formState.createForm.firstName,
+        lastName: formState.createForm.lastName,
+        email: formState.createForm.email,
+        password: formState.createForm.password,
+        role: formState.createForm.role,
       });
 
-      resetCreateForm();
+      formState.resetCreateForm();
       setDrawerOpen(false);
       await loadUsers();
       await loadAuthorOptions();
@@ -166,39 +121,14 @@ export function useUsersController({
   }
 
   function openDrawer() {
-    resetEditForm();
-    resetCreateForm();
+    formState.resetEditForm();
+    formState.resetCreateForm();
     setDrawerOpen(true);
   }
 
   function closeDrawer() {
     setDrawerOpen(false);
-    resetEditForm();
-  }
-
-  function beginEdit(user: UserRecord) {
-    setEditingId(user.id);
-    setEditFirstName(user.firstName);
-    setEditLastName(user.lastName);
-    setEditEmail(user.email);
-    setEditPassword("");
-    setShowEditPassword(false);
-    setEditRole(user.role);
-    setDrawerOpen(true);
-  }
-
-  function handleSearch(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setAppliedQuery(searchInput.trim());
-    setPage(1);
-    setFilterDrawerOpen(false);
-  }
-
-  function clearSearch() {
-    setSearchInput("");
-    setAppliedQuery("");
-    setPage(1);
-    setFilterDrawerOpen(false);
+    formState.resetEditForm();
   }
 
   async function handleUpdateUser(id: string) {
@@ -210,11 +140,13 @@ export function useUsersController({
 
     try {
       await updateUser(apiClient, id, {
-        firstName: editFirstName,
-        lastName: editLastName,
-        email: editEmail,
-        role: editRole,
-        ...(editPassword.trim() ? { password: editPassword } : {}),
+        firstName: formState.editForm.firstName,
+        lastName: formState.editForm.lastName,
+        email: formState.editForm.email,
+        role: formState.editForm.role,
+        ...(formState.editForm.password.trim()
+          ? { password: formState.editForm.password }
+          : {}),
       });
 
       closeDrawer();
@@ -250,7 +182,9 @@ export function useUsersController({
   }
 
   const clearDisabled =
-    loading || (searchInput.trim().length === 0 && appliedQuery.length === 0);
+    loading ||
+    (filters.filters.searchInput.trim().length === 0 &&
+      filters.filters.appliedQuery.length === 0);
 
   return {
     items,
@@ -261,63 +195,53 @@ export function useUsersController({
     hasNextPage,
     limit,
     sort,
-    appliedQuery,
+    appliedQuery: filters.filters.appliedQuery,
     clearDisabled,
     drawerOpen,
     filterDrawerOpen,
-    isEditing: editingId !== null,
-    editingId,
+    isEditing: formState.editingId !== null,
+    editingId: formState.editingId,
     authorOptions,
     openDrawer,
     closeDrawer,
-    beginEdit,
-    openFilterDrawer: () => setFilterDrawerOpen(true),
-    closeFilterDrawer: () => setFilterDrawerOpen(false),
-    setPage,
-    setLimit: (value: number) => {
-      setLimit(value);
-      setPage(1);
+    beginEdit: (user: UserRecord) => {
+      formState.beginEdit(user);
+      setDrawerOpen(true);
     },
-    setSort: (value: UserSortOption) => {
-      setSort(value);
-      setPage(1);
-    },
+    openFilterDrawer: filters.openFilterDrawer,
+    closeFilterDrawer: filters.closeFilterDrawer,
+    setPage: filters.setPage,
+    setLimit: filters.setLimit,
+    setSort: filters.setSort,
     deleteUser: handleDeleteUser,
     form: {
-      firstName,
-      lastName,
-      email,
-      password,
-      role,
-      showPassword: showCreatePassword,
-      setFirstName,
-      setLastName,
-      setEmail,
-      setPassword,
-      setRole,
-      togglePassword: () => setShowCreatePassword((current) => !current),
+      ...formState.createForm,
+      setFirstName: formState.setCreateFirstName,
+      setLastName: formState.setCreateLastName,
+      setEmail: formState.setCreateEmail,
+      setPassword: formState.setCreatePassword,
+      setRole: formState.setCreateRole,
+      togglePassword: formState.toggleCreatePassword,
       submit: handleCreateUser,
     },
     editForm: {
-      firstName: editFirstName,
-      lastName: editLastName,
-      email: editEmail,
-      password: editPassword,
-      role: editRole,
-      showPassword: showEditPassword,
-      setFirstName: setEditFirstName,
-      setLastName: setEditLastName,
-      setEmail: setEditEmail,
-      setPassword: setEditPassword,
-      setRole: setEditRole,
-      togglePassword: () => setShowEditPassword((current) => !current),
+      ...formState.editForm,
+      setFirstName: formState.setEditFirstName,
+      setLastName: formState.setEditLastName,
+      setEmail: formState.setEditEmail,
+      setPassword: formState.setEditPassword,
+      setRole: formState.setEditRole,
+      togglePassword: formState.toggleEditPassword,
       submit: handleUpdateUser,
     },
     filters: {
-      searchInput,
-      setSearchInput,
-      submit: handleSearch,
-      clear: clearSearch,
+      searchInput: filters.filters.searchInput,
+      setSearchInput: filters.setSearchInput,
+      submit: (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        filters.applySearch();
+      },
+      clear: filters.clearSearch,
     },
   };
 }

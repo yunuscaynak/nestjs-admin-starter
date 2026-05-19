@@ -1,14 +1,12 @@
 "use client";
 
 import { useState } from "react";
+import { POST_SORT_OPTIONS } from "@/features/posts/constants";
 import { usePostsController } from "@/features/posts/hooks/use-posts-controller";
+import { USER_SORT_OPTIONS } from "@/features/users/constants";
 import { useUsersController } from "@/features/users/hooks/use-users-controller";
-import type { ApiClient } from "../services/api-client";
-import {
-  LIMIT_OPTIONS,
-  POST_SORT_OPTIONS,
-  USER_SORT_OPTIONS,
-} from "./constants";
+import type { HttpClient } from "../services/http-client";
+import { LIMIT_OPTIONS } from "./constants";
 
 export function useAdminController({
   isAdmin,
@@ -17,7 +15,7 @@ export function useAdminController({
 }: {
   isAdmin: boolean;
   sessionToken: string | null;
-  apiClient: ApiClient;
+  apiClient: HttpClient;
 }) {
   const [activeAdminTab, setActiveAdminTab] = useState<"users" | "posts">(
     "users",

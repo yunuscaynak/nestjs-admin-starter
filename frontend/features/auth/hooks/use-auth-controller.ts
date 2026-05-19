@@ -7,18 +7,19 @@ import {
   logout,
   refreshAuthSession,
   register,
-} from "@/features/auth/services/api";
-import { createApiClient } from "@/features/shared/services/api-client";
+} from "@/features/auth/services/auth-service";
+import { createHttpClient } from "@/features/shared/services/http-client";
 import { SESSION_STORAGE_KEY } from "@/features/shared/lib/constants";
 import {
   getStorage,
   readStoredSession,
 } from "@/features/shared/lib/helpers";
 import type {
+  AuthFormValues,
   AuthResponse,
   StoredSession,
-  UserRecord,
-} from "@/features/shared/lib/types";
+} from "@/features/auth/types";
+import type { UserRecord } from "@/features/users/types";
 
 export function useAuthController() {
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
@@ -28,12 +29,14 @@ export function useAuthController() {
   const [authLoading, setAuthLoading] = useState(true);
   const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
   const [authError, setAuthError] = useState("");
-  const [authFirstName, setAuthFirstName] = useState("");
-  const [authLastName, setAuthLastName] = useState("");
-  const [authEmail, setAuthEmail] = useState("");
-  const [authPassword, setAuthPassword] = useState("");
-  const [authRememberMe, setAuthRememberMe] = useState(true);
-  const [showAuthPassword, setShowAuthPassword] = useState(false);
+  const [authForm, setAuthForm] = useState<AuthFormValues>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    rememberMe: true,
+    showPassword: false,
+  });
 
   const persistSession = useCallback((payload: AuthResponse) => {
     const session: StoredSession = {
@@ -65,7 +68,7 @@ export function useAuthController() {
   }, []);
 
   const refreshSession = useCallback(async (token: string) => {
-    const refreshClient = createApiClient({
+    const refreshClient = createHttpClient({
       getAccessToken: () => null,
       getRefreshToken: () => null,
       refreshSession: async () => {
@@ -80,7 +83,7 @@ export function useAuthController() {
   }, [clearSession, persistSession]);
 
   const fetchMe = useCallback(async (token: string) => {
-    const apiClient = createApiClient({
+    const apiClient = createHttpClient({
       getAccessToken: () => token,
       getRefreshToken: () => null,
       refreshSession,
@@ -94,7 +97,7 @@ export function useAuthController() {
 
   const apiClient = useMemo(
     () =>
-      createApiClient({
+      createHttpClient({
         getAccessToken: () => sessionToken,
         getRefreshToken: () => refreshToken,
         refreshSession,
@@ -136,20 +139,23 @@ export function useAuthController() {
       const data =
         authMode === "login"
           ? await login(apiClient, {
-              email: authEmail,
-              password: authPassword,
-              rememberMe: authRememberMe,
+              email: authForm.email,
+              password: authForm.password,
+              rememberMe: authForm.rememberMe,
             })
           : await register(apiClient, {
-              firstName: authFirstName,
-              lastName: authLastName,
-              email: authEmail,
-              password: authPassword,
-              rememberMe: authRememberMe,
+              firstName: authForm.firstName,
+              lastName: authForm.lastName,
+              email: authForm.email,
+              password: authForm.password,
+              rememberMe: authForm.rememberMe,
             });
       persistSession(data);
-      setAuthPassword("");
-      setShowAuthPassword(false);
+      setAuthForm((current) => ({
+        ...current,
+        password: "",
+        showPassword: false,
+      }));
     } catch (requestError) {
       setAuthError(
         requestError instanceof Error
@@ -190,18 +196,22 @@ export function useAuthController() {
     apiClient,
     handleLogout,
     authForm: {
-      firstName: authFirstName,
-      lastName: authLastName,
-      email: authEmail,
-      password: authPassword,
-      rememberMe: authRememberMe,
-      showPassword: showAuthPassword,
-      setFirstName: setAuthFirstName,
-      setLastName: setAuthLastName,
-      setEmail: setAuthEmail,
-      setPassword: setAuthPassword,
-      setRememberMe: setAuthRememberMe,
-      togglePassword: () => setShowAuthPassword((current) => !current),
+      ...authForm,
+      setFirstName: (value: string) =>
+        setAuthForm((current) => ({ ...current, firstName: value })),
+      setLastName: (value: string) =>
+        setAuthForm((current) => ({ ...current, lastName: value })),
+      setEmail: (value: string) =>
+        setAuthForm((current) => ({ ...current, email: value })),
+      setPassword: (value: string) =>
+        setAuthForm((current) => ({ ...current, password: value })),
+      setRememberMe: (value: boolean) =>
+        setAuthForm((current) => ({ ...current, rememberMe: value })),
+      togglePassword: () =>
+        setAuthForm((current) => ({
+          ...current,
+          showPassword: !current.showPassword,
+        })),
     },
   };
 }

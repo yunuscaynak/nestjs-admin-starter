@@ -1,13 +1,15 @@
-import 'dotenv/config';
 import { BadRequestException, ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import type { CorsOptions } from '@nestjs/common/interfaces/external/cors-options.interface';
 import type { Express, NextFunction, Request, Response } from 'express';
+import { loadEnvFile } from 'node:process';
 import { AppModule } from './app.module';
 import { ApiExceptionFilter } from './common/filters/api-exception.filter';
 import { SanitizeInputPipe } from './common/pipes/sanitize-input.pipe';
 import { getCorsOrigins } from './common/utils/cors.util';
+
+loadEnvFile?.();
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -56,7 +58,7 @@ async function bootstrap() {
     },
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],
     exposedHeaders: [
       'X-RateLimit-Limit',
       'X-RateLimit-Remaining',

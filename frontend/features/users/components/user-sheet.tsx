@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/sheet";
 import { IconLabel } from "@/features/shared/lib/icon-label";
 import { PasswordField } from "@/features/shared/lib/password-field";
-import type { Role } from "@/features/shared/lib/types";
+import type { Role } from "@/features/users/types";
 
 type UserSheetProps = {
   open: boolean;

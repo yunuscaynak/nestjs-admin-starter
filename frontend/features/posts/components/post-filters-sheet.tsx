@@ -12,10 +12,8 @@ import {
 } from "@/components/ui/sheet";
 import { IconLabel } from "@/features/shared/lib/icon-label";
 import { getFullName } from "@/features/shared/lib/helpers";
-import type {
-  PostSortOption,
-  UserRecord,
-} from "@/features/shared/lib/types";
+import type { PostSortOption } from "@/features/posts/types";
+import type { UserRecord } from "@/features/users/types";
 
 type PostFiltersSheetProps = {
   open: boolean;

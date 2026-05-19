@@ -16,7 +16,7 @@ import { UsersPanel } from "@/features/users/components/users-panel";
 import { IconLabel } from "../lib/icon-label";
 import type { AdminController } from "../lib/use-admin-controller";
 import { getFullName } from "../lib/helpers";
-import type { UserRecord } from "../lib/types";
+import type { UserRecord } from "@/features/users/types";
 
 type DashboardScreenProps = {
   currentUser: UserRecord;
@@ -33,16 +33,16 @@ export function DashboardScreen({
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top_right,rgba(0,173,181,0.14),transparent_24%),radial-gradient(circle_at_bottom_left,rgba(57,62,70,0.22),transparent_28%),linear-gradient(180deg,#222831_0%,#393E46_100%)] px-4 py-6 md:px-8 md:py-8">
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(238,238,238,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(238,238,238,0.04)_1px,transparent_1px)] bg-[size:40px_40px] opacity-70" />
+      <div className="absolute inset-0 bg-[linear-gradient(rgba(238,238,238,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(238,238,238,0.04)_1px,transparent_1px)] bg-size-[40px_40px] opacity-70" />
       <section className="relative mx-auto grid max-w-7xl gap-6">
-        <Card className="overflow-hidden border-[var(--line)] bg-[linear-gradient(135deg,rgba(57,62,70,0.92),rgba(34,40,49,0.84))]">
+        <Card className="overflow-hidden border-(--line) bg-[linear-gradient(135deg,rgba(57,62,70,0.92),rgba(34,40,49,0.84))]">
           <CardContent className="flex flex-col gap-6 p-6 md:flex-row md:items-end md:justify-between md:p-8">
             <div className="space-y-3">
               <Badge>Aktif Oturum</Badge>
-              <h1 className="font-serif text-4xl text-[var(--ink)] md:text-6xl">
+              <h1 className="font-serif text-4xl text-(--ink)ext-6xl">
                 {getFullName(currentUser)}
               </h1>
-              <p className="max-w-3xl text-sm text-[var(--ink-muted)] md:text-base">
+              <p className="max-w-3xl text-sm text-(--ink-muted) md:text-base">
                 {currentUser.email} · Rol: <strong>{currentUser.role}</strong>
               </p>
             </div>
@@ -56,8 +56,8 @@ export function DashboardScreen({
           <Card className="bg-[rgba(57,62,70,0.86)]">
             <CardContent className="space-y-3 p-6">
               <Badge>Yetki siniri</Badge>
-              <h2 className="font-serif text-3xl text-[var(--ink)]">Sadece izleme oturumu</h2>
-              <p className="text-sm leading-6 text-[var(--ink-muted)]">
+              <h2 className="font-serif text-3xl text-(--ink)">Sadece izleme oturumu</h2>
+              <p className="text-sm leading-6 text-(--ink-muted)">
                 Bu hesap giris yapti ancak `users` ve `posts` operasyonlari
                 sadece admin kullanicilar icin acik.
               </p>

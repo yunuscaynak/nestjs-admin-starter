@@ -1,5 +1,10 @@
-import type { ApiError, StoredSession, UserRecord } from "./types";
+import type { StoredSession } from "@/features/auth/types";
+import type { UserRecord } from "@/features/users/types";
 import { SESSION_STORAGE_KEY } from "./constants";
+
+type ApiError = {
+  message?: string | string[];
+};
 
 export async function getErrorMessage(response: Response) {
   try {

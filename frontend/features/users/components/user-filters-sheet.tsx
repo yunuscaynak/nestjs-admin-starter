@@ -11,7 +11,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { IconLabel } from "@/features/shared/lib/icon-label";
-import type { UserSortOption } from "@/features/shared/lib/types";
+import type { UserSortOption } from "@/features/users/types";
 
 type UserFiltersSheetProps = {
   open: boolean;

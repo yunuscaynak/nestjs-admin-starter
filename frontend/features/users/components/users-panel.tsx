@@ -11,10 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { IconLabel } from "@/features/shared/lib/icon-label";
 import { formatDate, getFullName } from "@/features/shared/lib/helpers";
-import type {
-  UserRecord,
-  UserSortOption,
-} from "@/features/shared/lib/types";
+import type { UserRecord, UserSortOption } from "@/features/users/types";
 
 type UsersPanelProps = {
   users: {

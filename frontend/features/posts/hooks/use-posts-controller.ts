@@ -1,18 +1,17 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import type { ApiClient } from "@/features/shared/services/api-client";
-import type {
-  PostRecord,
-  PostSortOption,
-  UserRecord,
-} from "@/features/shared/lib/types";
+import type { HttpClient } from "@/features/shared/services/http-client";
+import type { PostRecord } from "@/features/posts/types";
+import type { UserRecord } from "@/features/users/types";
 import {
   createPost,
   deletePost,
   listPosts,
   updatePost,
-} from "../services/api";
+} from "../services/post-service";
+import { usePostFilters } from "./use-post-filters";
+import { usePostFormState } from "./use-post-form-state";
 
 export function usePostsController({
   isAdmin,
@@ -22,45 +21,32 @@ export function usePostsController({
 }: {
   isAdmin: boolean;
   sessionToken: string | null;
-  apiClient: ApiClient;
+  apiClient: HttpClient;
   authorOptions: UserRecord[];
 }) {
   const [items, setItems] = useState<PostRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [hasNextPage, setHasNextPage] = useState(false);
   const [error, setError] = useState("");
-  const [title, setTitle] = useState("");
-  const [content, setContent] = useState("");
-  const [authorId, setAuthorId] = useState("");
-  const [published, setPublished] = useState(false);
-  const [page, setPage] = useState(1);
-  const [limit, setLimit] = useState<number>(20);
-  const [sort, setSort] = useState<PostSortOption>("createdAt:desc");
-  const [searchInput, setSearchInput] = useState("");
-  const [appliedQuery, setAppliedQuery] = useState("");
   const [publishedFilter, setPublishedFilter] = useState<"all" | "true" | "false">(
     "all",
   );
   const [authorFilter, setAuthorFilter] = useState("all");
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editTitle, setEditTitle] = useState("");
-  const [editContent, setEditContent] = useState("");
-  const [editPublished, setEditPublished] = useState(false);
-  const [editAuthorId, setEditAuthorId] = useState("");
   const [total, setTotal] = useState(0);
+  const filters = usePostFilters();
+  const formState = usePostFormState(authorOptions);
+  const { page, setPage, limit, sort, filterDrawerOpen, listQuery: baseListQuery } =
+    filters;
+  const { createForm, editForm, editingId, setCreateAuthorId } = formState;
 
   const listQuery = useMemo(
     () => ({
-      page,
-      limit,
-      sort,
-      q: appliedQuery || undefined,
+      ...baseListQuery,
       authorId: authorFilter !== "all" ? authorFilter : undefined,
       published: publishedFilter !== "all" ? publishedFilter : undefined,
     }),
-    [appliedQuery, authorFilter, limit, page, publishedFilter, sort],
+    [authorFilter, baseListQuery, publishedFilter],
   );
 
   const loadPosts = useCallback(async () => {
@@ -92,7 +78,7 @@ export function usePostsController({
     } finally {
       setLoading(false);
     }
-  }, [apiClient, isAdmin, listQuery, page, sessionToken]);
+  }, [apiClient, isAdmin, listQuery, page, sessionToken, setPage]);
 
   useEffect(() => {
     if (!isAdmin) {
@@ -103,25 +89,10 @@ export function usePostsController({
   }, [isAdmin, loadPosts]);
 
   useEffect(() => {
-    if (!authorId && authorOptions.length > 0) {
-      setAuthorId(authorOptions[0].id);
+    if (!createForm.authorId && authorOptions.length > 0) {
+      setCreateAuthorId(authorOptions[0].id);
     }
-  }, [authorId, authorOptions]);
-
-  function resetCreateForm() {
-    setTitle("");
-    setContent("");
-    setPublished(false);
-    setAuthorId((current) => current || authorOptions[0]?.id || "");
-  }
-
-  function resetEditForm() {
-    setEditingId(null);
-    setEditTitle("");
-    setEditContent("");
-    setEditPublished(false);
-    setEditAuthorId("");
-  }
+  }, [authorOptions, createForm.authorId, setCreateAuthorId]);
 
   async function handleCreatePost(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -133,13 +104,13 @@ export function usePostsController({
 
     try {
       await createPost(apiClient, {
-        title,
-        content,
-        authorId,
-        published,
+        title: createForm.title,
+        content: createForm.content,
+        authorId: createForm.authorId,
+        published: createForm.published,
       });
 
-      resetCreateForm();
+      formState.resetCreateForm();
       setDrawerOpen(false);
       await loadPosts();
     } catch (requestError) {
@@ -152,39 +123,14 @@ export function usePostsController({
   }
 
   function openDrawer() {
-    resetEditForm();
-    resetCreateForm();
+    formState.resetEditForm();
+    formState.resetCreateForm();
     setDrawerOpen(true);
   }
 
   function closeDrawer() {
     setDrawerOpen(false);
-    resetEditForm();
-  }
-
-  function beginEdit(post: PostRecord) {
-    setEditingId(post.id);
-    setEditTitle(post.title);
-    setEditContent(post.content);
-    setEditPublished(post.published);
-    setEditAuthorId(post.author.id);
-    setDrawerOpen(true);
-  }
-
-  function handleSearch(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setAppliedQuery(searchInput.trim());
-    setPage(1);
-    setFilterDrawerOpen(false);
-  }
-
-  function clearSearch() {
-    setSearchInput("");
-    setAppliedQuery("");
-    setPublishedFilter("all");
-    setAuthorFilter("all");
-    setPage(1);
-    setFilterDrawerOpen(false);
+    formState.resetEditForm();
   }
 
   async function handleUpdatePost(id: string) {
@@ -196,10 +142,10 @@ export function usePostsController({
 
     try {
       await updatePost(apiClient, id, {
-        title: editTitle,
-        content: editContent,
-        published: editPublished,
-        authorId: editAuthorId,
+        title: editForm.title,
+        content: editForm.content,
+        published: editForm.published,
+        authorId: editForm.authorId,
       });
 
       closeDrawer();
@@ -232,8 +178,8 @@ export function usePostsController({
 
   const clearDisabled =
     loading &&
-    searchInput.trim().length === 0 &&
-    appliedQuery.length === 0 &&
+    filters.filters.searchInput.trim().length === 0 &&
+    filters.filters.appliedQuery.length === 0 &&
     publishedFilter === "all" &&
     authorFilter === "all";
 
@@ -246,7 +192,7 @@ export function usePostsController({
     hasNextPage,
     limit,
     sort,
-    appliedQuery,
+    appliedQuery: filters.filters.appliedQuery,
     publishedFilter,
     authorFilter,
     clearDisabled,
@@ -256,54 +202,52 @@ export function usePostsController({
     editingId,
     openDrawer,
     closeDrawer,
-    beginEdit,
-    openFilterDrawer: () => setFilterDrawerOpen(true),
-    closeFilterDrawer: () => setFilterDrawerOpen(false),
-    setPage,
-    setLimit: (value: number) => {
-      setLimit(value);
-      setPage(1);
+    beginEdit: (post: PostRecord) => {
+      formState.beginEdit(post);
+      setDrawerOpen(true);
     },
-    setSort: (value: PostSortOption) => {
-      setSort(value);
-      setPage(1);
-    },
+    openFilterDrawer: filters.openFilterDrawer,
+    closeFilterDrawer: filters.closeFilterDrawer,
+    setPage: filters.setPage,
+    setLimit: filters.setLimit,
+    setSort: filters.setSort,
     setPublishedFilter: (value: "all" | "true" | "false") => {
       setPublishedFilter(value);
-      setPage(1);
+      filters.setPage(1);
     },
     setAuthorFilter: (value: string) => {
       setAuthorFilter(value);
-      setPage(1);
+      filters.setPage(1);
     },
     deletePost: handleDeletePost,
     form: {
-      title,
-      content,
-      authorId,
-      published,
-      setTitle,
-      setContent,
-      setAuthorId,
-      setPublished,
+      ...formState.createForm,
+      setTitle: formState.setCreateTitle,
+      setContent: formState.setCreateContent,
+      setAuthorId: formState.setCreateAuthorId,
+      setPublished: formState.setCreatePublished,
       submit: handleCreatePost,
     },
     editForm: {
-      title: editTitle,
-      content: editContent,
-      authorId: editAuthorId,
-      published: editPublished,
-      setTitle: setEditTitle,
-      setContent: setEditContent,
-      setAuthorId: setEditAuthorId,
-      setPublished: setEditPublished,
+      ...formState.editForm,
+      setTitle: formState.setEditTitle,
+      setContent: formState.setEditContent,
+      setAuthorId: formState.setEditAuthorId,
+      setPublished: formState.setEditPublished,
       submit: handleUpdatePost,
     },
     filters: {
-      searchInput,
-      setSearchInput,
-      submit: handleSearch,
-      clear: clearSearch,
+      searchInput: filters.filters.searchInput,
+      setSearchInput: filters.setSearchInput,
+      submit: (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        filters.applyFilters();
+      },
+      clear: () => {
+        filters.clearFilters();
+        setPublishedFilter("all");
+        setAuthorFilter("all");
+      },
     },
   };
 }

@@ -33,7 +33,7 @@ export function PasswordField({
         type="button"
         variant="ghost"
         size="icon"
-        className="absolute right-1 top-1 h-9 w-9 text-[var(--ink-muted)]"
+        className="absolute right-1 top-1 h-9 w-9 text-(--ink-muted)"
         onClick={onToggle}
         aria-label={visible ? "Sifreyi gizle" : "Sifreyi goster"}
       >

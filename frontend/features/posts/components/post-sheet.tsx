@@ -13,7 +13,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { IconLabel } from "@/features/shared/lib/icon-label";
 import { getFullName } from "@/features/shared/lib/helpers";
-import type { UserRecord } from "@/features/shared/lib/types";
+import type { UserRecord } from "@/features/users/types";
 
 type PostSheetProps = {
   open: boolean;
