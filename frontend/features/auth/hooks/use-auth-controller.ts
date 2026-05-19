@@ -1,9 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
-import { API_BASE_URL, SESSION_STORAGE_KEY } from "@/features/shared/lib/constants";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  getErrorMessage,
+  fetchCurrentUser,
+  login,
+  logout,
+  refreshAuthSession,
+  register,
+} from "@/features/auth/services/api";
+import { createApiClient } from "@/features/shared/services/api-client";
+import { SESSION_STORAGE_KEY } from "@/features/shared/lib/constants";
+import {
   getStorage,
   readStoredSession,
 } from "@/features/shared/lib/helpers";
@@ -57,43 +64,43 @@ export function useAuthController() {
     setCurrentUser(null);
   }, []);
 
-  const fetchMe = useCallback(async (token: string) => {
-    const response = await fetch(`${API_BASE_URL}/auth/me`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
+  const refreshSession = useCallback(async (token: string) => {
+    const refreshClient = createApiClient({
+      getAccessToken: () => null,
+      getRefreshToken: () => null,
+      refreshSession: async () => {
+        throw new Error("Refresh tekrar cagrilamiyor.");
       },
-      cache: "no-store",
+      clearSession,
     });
+    const data = await refreshAuthSession(refreshClient, token);
+    persistSession(data);
 
-    if (!response.ok) {
-      throw new Error(await getErrorMessage(response));
-    }
+    return data;
+  }, [clearSession, persistSession]);
 
-    const user = (await response.json()) as UserRecord;
+  const fetchMe = useCallback(async (token: string) => {
+    const apiClient = createApiClient({
+      getAccessToken: () => token,
+      getRefreshToken: () => null,
+      refreshSession,
+      clearSession,
+    });
+    const user = await fetchCurrentUser(apiClient);
+
     setCurrentUser(user);
     setSessionToken(token);
-  }, []);
+  }, [clearSession, refreshSession]);
 
-  const refreshSession = useCallback(
-    async (token: string) => {
-      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refreshToken: token }),
-      });
-
-      if (!response.ok) {
-        throw new Error(await getErrorMessage(response));
-      }
-
-      const data = (await response.json()) as AuthResponse;
-      persistSession(data);
-
-      return data;
-    },
-    [persistSession],
+  const apiClient = useMemo(
+    () =>
+      createApiClient({
+        getAccessToken: () => sessionToken,
+        getRefreshToken: () => refreshToken,
+        refreshSession,
+        clearSession,
+      }),
+    [clearSession, refreshSession, refreshToken, sessionToken],
   );
 
   useEffect(() => {
@@ -120,77 +127,26 @@ export function useAuthController() {
       });
   }, [clearSession, fetchMe, refreshSession]);
 
-  const authorizedFetch = useCallback(
-    async (input: string, init?: RequestInit): Promise<Response> => {
-      if (!sessionToken) {
-        throw new Error("Oturum bulunamadi.");
-      }
-
-      const requestInit: RequestInit = {
-        ...init,
-        headers: {
-          ...(init?.headers ?? {}),
-          Authorization: `Bearer ${sessionToken}`,
-        },
-      };
-
-      let response = await fetch(input, requestInit);
-
-      if (response.status !== 401 || !refreshToken) {
-        return response;
-      }
-
-      try {
-        const refreshedSession = await refreshSession(refreshToken);
-        response = await fetch(input, {
-          ...init,
-          headers: {
-            ...(init?.headers ?? {}),
-            Authorization: `Bearer ${refreshedSession.accessToken}`,
-          },
-        });
-        return response;
-      } catch {
-        clearSession();
-        throw new Error("Oturum suresi doldu. Tekrar giris yapin.");
-      }
-    },
-    [clearSession, refreshSession, refreshToken, sessionToken],
-  );
-
   async function submitAuth(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsSubmittingAuth(true);
     setAuthError("");
 
     try {
-      const endpoint = authMode === "login" ? "/auth/login" : "/auth/register";
-      const payload =
+      const data =
         authMode === "login"
-          ? {
+          ? await login(apiClient, {
               email: authEmail,
               password: authPassword,
               rememberMe: authRememberMe,
-            }
-          : {
+            })
+          : await register(apiClient, {
               firstName: authFirstName,
               lastName: authLastName,
               email: authEmail,
               password: authPassword,
               rememberMe: authRememberMe,
-            };
-
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      if (!response.ok) {
-        throw new Error(await getErrorMessage(response));
-      }
-
-      const data = (await response.json()) as AuthResponse;
+            });
       persistSession(data);
       setAuthPassword("");
       setShowAuthPassword(false);
@@ -216,13 +172,7 @@ export function useAuthController() {
     }
 
     try {
-      await fetch(`${API_BASE_URL}/auth/logout`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refreshToken: currentRefreshToken }),
-      });
+      await logout(apiClient, currentRefreshToken);
     } catch {
       // Cikis deneyimini bloklamamak icin hata yutulur.
     }
@@ -237,7 +187,7 @@ export function useAuthController() {
     authError,
     submitAuth,
     sessionToken,
-    authorizedFetch,
+    apiClient,
     handleLogout,
     authForm: {
       firstName: authFirstName,

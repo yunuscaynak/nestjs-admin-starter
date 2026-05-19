@@ -11,7 +11,15 @@ export async function getErrorMessage(response: Response) {
       return body.message;
     }
   } catch {
-    // Body bos veya JSON degilse varsayilan mesaji kullan.
+    try {
+      const fallbackText = await response.text();
+
+      if (fallbackText.trim()) {
+        return fallbackText;
+      }
+    } catch {
+      // Body okunamazsa varsayilan mesaji kullan.
+    }
   }
 
   return "Bilinmeyen bir hata olustu.";

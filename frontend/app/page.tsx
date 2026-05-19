@@ -13,7 +13,7 @@ export default function Home() {
   const admin = useAdminController({
     isAdmin: Boolean(isAdmin),
     sessionToken: auth.sessionToken,
-    authorizedFetch: auth.authorizedFetch,
+    apiClient: auth.apiClient,
   });
 
   if (auth.authLoading) {
