@@ -98,6 +98,8 @@ export function PostSheet({
             onChange={(event) => editForm.setTitle(event.target.value)}
             placeholder="Baslik"
             required
+            minLength={3}
+            maxLength={160}
           />
           <Select
             value={editForm.authorId}
@@ -121,8 +123,13 @@ export function PostSheet({
             onChange={(event) => editForm.setContent(event.target.value)}
             placeholder="Icerik"
             required
+            minLength={10}
+            maxLength={5000}
             rows={7}
           />
+          <p className="text-xs text-(--ink-muted)">
+            Icerik en az 10 karakter olmali.
+          </p>
           <div className="flex flex-wrap gap-3 pt-2">
             <Button type="submit">
               <IconLabel icon={faFloppyDisk}>Kaydet</IconLabel>
@@ -139,6 +146,8 @@ export function PostSheet({
             onChange={(event) => form.setTitle(event.target.value)}
             placeholder="Baslik"
             required
+            minLength={3}
+            maxLength={160}
           />
           <Select
             value={form.authorId}
@@ -165,8 +174,13 @@ export function PostSheet({
             onChange={(event) => form.setContent(event.target.value)}
             placeholder="Icerik"
             required
+            minLength={10}
+            maxLength={5000}
             rows={7}
           />
+          <p className="text-xs text-(--ink-muted)">
+            Icerik en az 10 karakter olmali.
+          </p>
           <div className="flex flex-wrap gap-3 pt-2">
             <Button type="submit" disabled={loading || !form.authorId}>
               <IconLabel icon={faPlus}>Post Ekle</IconLabel>
