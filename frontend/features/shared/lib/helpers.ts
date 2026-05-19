@@ -38,6 +38,10 @@ export function getFullName(user: Pick<UserRecord, "firstName" | "lastName">) {
   return `${user.firstName} ${user.lastName}`;
 }
 
+export function getInitials(user: Pick<UserRecord, "firstName" | "lastName">) {
+  return `${user.firstName.charAt(0)}${user.lastName.charAt(0)}`.toUpperCase();
+}
+
 export function getStorage(rememberMe: boolean) {
   return rememberMe ? window.localStorage : window.sessionStorage;
 }
