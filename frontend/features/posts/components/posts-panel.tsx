@@ -48,7 +48,7 @@ export function PostsPanel({
         <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="space-y-2">
             <Badge>Posts</Badge>
-            <h2 className="font-serif text-3xl text-[var(--ink)]">Post Yonetimi</h2>
+            <h2 className="font-serif text-3xl text-(--ink)">Post Yonetimi</h2>
           </div>
           <div className="flex flex-wrap gap-3">
             <Button variant="outline" onClick={posts.openFilterDrawer}>
@@ -61,14 +61,14 @@ export function PostsPanel({
         </div>
 
         {posts.error ? (
-          <p className="mb-4 rounded-2xl border border-[rgba(166,41,41,0.15)] bg-[rgba(166,41,41,0.08)] px-4 py-3 text-sm font-medium text-[var(--danger)]">
+          <p className="mb-4 rounded-2xl border border-[rgba(166,41,41,0.15)] bg-[rgba(166,41,41,0.08)] px-4 py-3 text-sm font-medium text-(--danger)">
             {posts.error}
           </p>
         ) : null}
 
         <div className="grid gap-4">
           {!posts.loading && posts.items.length === 0 ? (
-            <p className="rounded-[24px] border border-dashed border-[var(--line)] bg-[rgba(34,40,49,0.6)] px-5 py-8 text-center text-sm text-[var(--ink-muted)]">
+            <p className="rounded-3xl border border-dashed border-(--line) bg-[rgba(34,40,49,0.6)] px-5 py-8 text-center text-sm text-(--ink-muted)">
               Bu filtrelere uygun post yok.
             </p>
           ) : null}
@@ -76,19 +76,19 @@ export function PostsPanel({
           {posts.items.map((post) => (
             <article
               key={post.id}
-              className="grid gap-4 rounded-[24px] border border-[var(--line)] bg-[rgba(34,40,49,0.7)] p-5"
+              className="grid gap-4 rounded-3xl border border-(--line) bg-[rgba(34,40,49,0.7)] p-5"
             >
               <div className="flex flex-col gap-4 md:flex-row md:justify-between">
                 <div className="space-y-2">
-                  <h3 className="font-serif text-2xl text-[var(--ink)]">
+                  <h3 className="font-serif text-2xl text-(--ink)">
                     {post.title}
                   </h3>
-                  <p className="max-w-3xl text-sm leading-6 text-[var(--ink-muted)]">
+                  <p className="max-w-3xl text-sm leading-6 text-(--ink-muted)">
                     {post.content}
                   </p>
                 </div>
-                <div className="grid gap-3 text-sm text-[var(--ink-muted)] md:justify-items-end">
-                  <Badge className="border-[rgba(0,173,181,0.18)] bg-[rgba(0,173,181,0.12)] text-[var(--accent)]">
+                <div className="grid gap-3 text-sm text-(--ink-muted) md:justify-items-end">
+                  <Badge className="border-[rgba(0,173,181,0.18)] bg-[rgba(0,173,181,0.12)] text-(--accent)">
                     {post.published ? "YAYINDA" : "TASLAK"}
                   </Badge>
                   <span>#{post.id.slice(0, 8)}</span>
@@ -97,7 +97,7 @@ export function PostsPanel({
               </div>
 
               <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-                <div className="inline-flex items-center gap-3 text-sm text-[var(--ink-muted)]">
+                <div className="inline-flex items-center gap-3 text-sm text-(--ink-muted)">
                   <FontAwesomeIcon icon={faFileLines} className="h-4 w-4" />
                   <span>
                     {getFullName(post.author)} · {post.author.email}
@@ -119,7 +119,7 @@ export function PostsPanel({
           ))}
         </div>
 
-        <div className="mt-5 flex flex-col gap-4 border-t border-[var(--line)] pt-5 md:flex-row md:items-center md:justify-between">
+        <div className="mt-5 flex flex-col gap-4 border-t border-(--line) pt-5 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-2">
             <Badge>{posts.loading ? "Yukleniyor..." : `${posts.total} post`}</Badge>
             <Badge>
@@ -143,7 +143,7 @@ export function PostsPanel({
             >
               <IconLabel icon={faArrowLeft}>Onceki</IconLabel>
             </Button>
-            <span className="text-sm font-medium text-[var(--ink-muted)]">
+            <span className="text-sm font-medium text-(--ink-muted)">
               Sayfa {posts.page}
             </span>
             <Button

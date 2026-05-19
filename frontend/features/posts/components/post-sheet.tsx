@@ -62,7 +62,7 @@ export function PostSheet({
     <Sheet open={open} onClose={onClose}>
       <SheetHeader>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--ink-muted)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--ink-muted)">
             {isEditing ? "Guncelle" : "Yeni Post"}
           </p>
           <SheetTitle>{isEditing ? "Post Duzenle" : "Post Ekle"}</SheetTitle>
@@ -78,7 +78,7 @@ export function PostSheet({
       </SheetHeader>
 
       {error ? (
-        <p className="mb-4 rounded-2xl border border-[rgba(166,41,41,0.15)] bg-[rgba(166,41,41,0.08)] px-4 py-3 text-sm font-medium text-[var(--danger)]">
+        <p className="mb-4 rounded-2xl border border-[rgba(166,41,41,0.15)] bg-[rgba(166,41,41,0.08)] px-4 py-3 text-sm font-medium text-(--danger)">
           {error}
         </p>
       ) : null}

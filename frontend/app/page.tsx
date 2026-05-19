@@ -21,10 +21,10 @@ export default function Home() {
       <main className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top,rgba(0,173,181,0.14),transparent_32%),linear-gradient(180deg,#222831_0%,#393E46_100%)] px-4">
         <Card className="w-full max-w-xl bg-[rgba(57,62,70,0.9)]">
           <CardContent className="space-y-3 p-8 text-center">
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--ink-muted)]">
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--ink-muted)">
               Yukleniyor
             </p>
-            <h1 className="font-serif text-4xl text-[var(--ink)]">
+            <h1 className="font-serif text-4xl text-(--ink)">
               Oturum kontrol ediliyor
             </h1>
           </CardContent>

@@ -106,14 +106,17 @@ export function createHttpClient({
       query,
       headers,
       timeoutMs = DEFAULT_REQUEST_TIMEOUT_MS,
-      signal,
+      signal: requestSignal,
       ...init
     } = options;
     const url = buildUrl(path, query);
 
     const execute = async (accessToken?: string | null) => {
       const requestHeaders = createRequestHeaders(headers);
-      const requestTimeout = withRequestTimeout(timeoutMs, signal);
+      const requestTimeout = withRequestTimeout(
+        timeoutMs,
+        requestSignal ?? undefined,
+      );
 
       if (auth) {
         if (!accessToken) {

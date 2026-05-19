@@ -62,7 +62,7 @@ export function PostFiltersSheet({
     <Sheet open={open} onClose={onClose}>
       <SheetHeader>
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--ink-muted)]">
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-(--ink-muted)">
             Filtreler
           </p>
           <SheetTitle>Post Filtreleri</SheetTitle>

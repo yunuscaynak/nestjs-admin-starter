@@ -40,7 +40,7 @@ export function UsersPanel({ users, sortOptions }: UsersPanelProps) {
         <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="space-y-2">
             <Badge>User</Badge>
-            <h2 className="font-serif text-3xl text-[var(--ink)]">
+            <h2 className="font-serif text-3xl text-(--ink)">
               Kullanici Yonetimi
             </h2>
           </div>
@@ -55,14 +55,14 @@ export function UsersPanel({ users, sortOptions }: UsersPanelProps) {
         </div>
 
         {users.error ? (
-          <p className="mb-4 rounded-2xl border border-[rgba(166,41,41,0.15)] bg-[rgba(166,41,41,0.08)] px-4 py-3 text-sm font-medium text-[var(--danger)]">
+          <p className="mb-4 rounded-2xl border border-[rgba(166,41,41,0.15)] bg-[rgba(166,41,41,0.08)] px-4 py-3 text-sm font-medium text-(--danger)">
             {users.error}
           </p>
         ) : null}
 
         <div className="grid gap-4">
           {!users.loading && users.items.length === 0 ? (
-            <p className="rounded-[24px] border border-dashed border-[var(--line)] bg-[rgba(34,40,49,0.6)] px-5 py-8 text-center text-sm text-[var(--ink-muted)]">
+            <p className="rounded-3xl border border-dashed border-(--line) bg-[rgba(34,40,49,0.6)] px-5 py-8 text-center text-sm text-(--ink-muted)">
               Bu filtrelere uygun kullanici yok.
             </p>
           ) : null}
@@ -70,16 +70,16 @@ export function UsersPanel({ users, sortOptions }: UsersPanelProps) {
           {users.items.map((user) => (
             <article
               key={user.id}
-              className="grid gap-4 rounded-[24px] border border-[var(--line)] bg-[rgba(34,40,49,0.7)] p-5 md:grid-cols-[1fr_auto]"
+              className="grid gap-4 rounded-3xl border border-(--line) bg-[rgba(34,40,49,0.7)] p-5 md:grid-cols-[1fr_auto]"
             >
               <div className="space-y-2">
-                <h3 className="font-serif text-2xl text-[var(--ink)]">
+                <h3 className="font-serif text-2xl text-(--ink)">
                   {getFullName(user)}
                 </h3>
-                <p className="text-sm text-[var(--ink-muted)]">{user.email}</p>
+                <p className="text-sm text-(--ink-muted)">{user.email}</p>
               </div>
-              <div className="grid gap-3 text-sm text-[var(--ink-muted)] md:justify-items-end">
-                <Badge className="border-[rgba(0,173,181,0.18)] bg-[rgba(0,173,181,0.12)] text-[var(--accent)]">
+              <div className="grid gap-3 text-sm text-(--ink-muted) md:justify-items-end">
+                <Badge className="border-[rgba(0,173,181,0.18)] bg-[rgba(0,173,181,0.12)] text-(--accent)">
                   {user.role}
                 </Badge>
                 <span>#{user.id.slice(0, 8)}</span>
@@ -100,7 +100,7 @@ export function UsersPanel({ users, sortOptions }: UsersPanelProps) {
           ))}
         </div>
 
-        <div className="mt-5 flex flex-col gap-4 border-t border-[var(--line)] pt-5 md:flex-row md:items-center md:justify-between">
+        <div className="mt-5 flex flex-col gap-4 border-t border-(--line) pt-5 md:flex-row md:items-center md:justify-between">
           <div className="flex flex-wrap gap-2">
             <Badge>{users.loading ? "Yukleniyor..." : `${users.total} kayit`}</Badge>
             <Badge>
@@ -117,7 +117,7 @@ export function UsersPanel({ users, sortOptions }: UsersPanelProps) {
             >
               <IconLabel icon={faArrowLeft}>Onceki</IconLabel>
             </Button>
-            <span className="text-sm font-medium text-[var(--ink-muted)]">
+            <span className="text-sm font-medium text-(--ink-muted)">
               Sayfa {users.page}
             </span>
             <Button
