@@ -1,38 +1,38 @@
-# Nest CRUD (NestJS + Prisma + PostgreSQL + Next.js)
+# NestJS Admin Starter (NestJS + Prisma + PostgreSQL + Next.js)
 
-Basit bir full-stack kullanıcı CRUD projesi.
+Full-stack starter project with NestJS-based authentication and an admin panel.
 
 - Backend: NestJS + Prisma + PostgreSQL
 - Frontend: Next.js (App Router)
 
-## Özellikler
+## Features
 
-- Login / register / refresh / logout endpoint'leri
-- Access + refresh token tabanli kimlik dogrulama
-- Remember me secenegi ile kalici oturum
-- Admin korumalı kullanıcı oluşturma, listeleme, tek kayıt getirme, güncelleme, silme
-- Swagger dokümantasyonu (`/docs`)
-- Prisma ile PostgreSQL bağlantısı
-- Login ekranı ve admin paneli içeren frontend arayüzü
+- Login / register / refresh / logout endpoints
+- Access + refresh token based authentication
+- Persistent session with a remember me option
+- Admin-protected user create, list, fetch, update, and delete operations
+- Swagger documentation (`/docs`)
+- PostgreSQL connection via Prisma
+- Frontend UI with a login screen and admin panel
 - API prefix: `/api`
 
-## Proje Yapısı
+## Project Structure
 
 ```text
-nest-crud/
+nestjs-admin-starter/
   backend/   # NestJS API
   frontend/  # Next.js UI
 ```
 
-## Gereksinimler
+## Requirements
 
 - Node.js 20+
-- pnpm (backend için)
-- npm (frontend için)
+- pnpm (for the backend)
+- npm (for the frontend)
 
-## Hızlı Başlangıç
+## Quick Start
 
-### 1) Backend'i kur ve veritabanını hazırla
+### 1) Set up the backend and prepare the database
 
 ```bash
 cd backend
@@ -43,21 +43,21 @@ pnpm db:push
 pnpm start:dev
 ```
 
-Backend varsayılan: `http://localhost:3002`  
+Backend default: `http://localhost:3002`  
 API: `http://localhost:3002/api`  
 Swagger: `http://localhost:3002/docs`
 
-### 2) Frontend'i çalıştır
+### 2) Run the frontend
 
 ```bash
 cd frontend
 npm install
-npm run dev -- --port 3001
+npm run dev -- --port 3000
 ```
 
-Frontend: `http://localhost:3001`
+Frontend: `http://localhost:3000`
 
-## Ortam Değişkenleri
+## Environment Variables
 
 `backend/.env`:
 
@@ -67,7 +67,7 @@ PORT=3002
 SWAGGER_PATH=docs
 ```
 
-İstersen frontend için API adresini override edebilirsin:
+If needed, you can override the API base URL for the frontend:
 
 `frontend/.env.local`
 
@@ -75,9 +75,9 @@ SWAGGER_PATH=docs
 NEXT_PUBLIC_API_BASE_URL=http://localhost:3002/api
 ```
 
-## Makefile Kullanımı
+## Makefile Usage
 
-Kök dizinden:
+From the project root:
 
 ```bash
 make install
@@ -87,7 +87,7 @@ make backend
 make frontend
 ```
 
-Backend klasörü içinden:
+From inside the backend directory:
 
 ```bash
 make install
@@ -95,7 +95,7 @@ make setup
 make backend
 ```
 
-## Backend Scriptleri
+## Backend Scripts
 
 ```bash
 pnpm start:dev
@@ -107,7 +107,7 @@ pnpm db:migrate
 pnpm db:studio
 ```
 
-## API Uçları
+## API Endpoints
 
 - `GET /`
 - `POST /api/auth/register`
@@ -126,21 +126,21 @@ pnpm db:studio
 - `PATCH /api/users/:id`
 - `DELETE /api/users/:id`
 
-## Auth Notları
+## Auth Notes
 
-- Sistemde parola set edilmiş ilk hesap `ADMIN` rolüyle oluşturulur.
-- `users` endpoint'leri sadece `ADMIN` rolündeki kullanıcılar için açıktır.
-- Access token kisa omurludur; frontend gerekirse refresh token ile oturumu otomatik yeniler.
-- `remember me` seciliyse refresh token daha uzun omurlu uretilir ve oturum `localStorage` tarafinda tutulur.
-- `remember me` kapaliysa oturum `sessionStorage` tarafinda tutulur; tarayici sekmesi kapaninca temizlenir.
-- Eski veritabanında auth öncesinden kalan kullanıcı kayıtları varsa bu kayıtların `passwordHash` alanı boş olabilir; bu kullanıcılar doğrudan login olamaz.
-- Böyle bir durumda yeni bir hesap açarsan, sistemde daha önce parola set edilmiş kullanıcı yoksa bu yeni hesap otomatik olarak `ADMIN` olur.
+- The first account created with a password in the system is assigned the `ADMIN` role.
+- The `users` endpoints are only accessible to users with the `ADMIN` role.
+- The access token is short-lived; the frontend automatically refreshes the session with the refresh token when needed.
+- If `remember me` is enabled, a longer-lived refresh token is generated and the session is stored in `localStorage`.
+- If `remember me` is disabled, the session is stored in `sessionStorage` and is cleared when the browser tab is closed.
+- If your old database contains user records from before auth was added, their `passwordHash` field may be empty; those users cannot log in directly.
+- In that case, if you create a new account and there is no existing user with a password set, that new account is automatically assigned the `ADMIN` role.
 
-## Sık Karşılaşılan Hatalar
+## Common Issues
 
 ### `EADDRINUSE: address already in use :::3002`
 
-3002 portu doludur.
+Port 3002 is already in use.
 
 ```bash
 lsof -nP -iTCP:3002 -sTCP:LISTEN
@@ -149,27 +149,27 @@ kill <PID>
 
 ### `Cannot GET /api/users`
 
-Backend çalışıyor olabilir ama API prefix eksik sürüm ayağa kalkmış olabilir. Güncel backend koduyla:
+The backend may be running, but you might have started a version without the API prefix. With the current backend code:
 
 ```bash
 cd backend
 pnpm start:dev
 ```
 
-ve `http://localhost:3002/api/users` adresini kontrol et.
+Then check `http://localhost:3002/api/users`.
 
-### `Prisma db push` required-column hatası
+### `Prisma db push` required-column error
 
-Local PostgreSQL veritabanında eski şemaya ait kayıtlar olabilir:
+Your local PostgreSQL database may still contain records from an older schema:
 
 ```bash
 cd backend
 pnpm db:push
 
-# Gerekirse local veriyi silip şemayı baştan kur
+# If needed, wipe local data and recreate the schema
 pnpm db:reset
 ```
 
-## Lisans
+## License
 
 UNLICENSED
