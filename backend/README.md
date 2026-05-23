@@ -41,6 +41,27 @@ pnpm start:dev
 
 `DATABASE_URL` varsayılanı: `postgresql://postgres:postgres@localhost:5432/nestcrud?schema=public`
 
+Eğer `pnpm db:push` şu hatayla durursa:
+
+```text
+Added the required column `firstName` ...
+Added the required column `lastName` ...
+```
+
+mevcut local veritabanında eski şemaya ait kayıtlar vardır. İki seçenek var:
+
+```bash
+# Veriyi korumak istiyorsan önce mevcut satırları migration ile dönüştür
+pnpm db:migrate
+
+# Local geliştirme verisini silebilirsan veritabanını sıfırla
+pnpm db:reset
+# veya
+make db-reset
+```
+
+`db:reset` komutu local PostgreSQL veritabanını drop eder ve tüm veriyi siler.
+
 ## Project setup
 
 ```bash

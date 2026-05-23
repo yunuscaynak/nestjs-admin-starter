@@ -1,8 +1,8 @@
-# Nest CRUD (NestJS + Prisma + SQLite + Next.js)
+# Nest CRUD (NestJS + Prisma + PostgreSQL + Next.js)
 
 Basit bir full-stack kullanıcı CRUD projesi.
 
-- Backend: NestJS + Prisma + SQLite
+- Backend: NestJS + Prisma + PostgreSQL
 - Frontend: Next.js (App Router)
 
 ## Özellikler
@@ -12,7 +12,7 @@ Basit bir full-stack kullanıcı CRUD projesi.
 - Remember me secenegi ile kalici oturum
 - Admin korumalı kullanıcı oluşturma, listeleme, tek kayıt getirme, güncelleme, silme
 - Swagger dokümantasyonu (`/docs`)
-- Prisma ile SQLite bağlantısı
+- Prisma ile PostgreSQL bağlantısı
 - Login ekranı ve admin paneli içeren frontend arayüzü
 - API prefix: `/api`
 
@@ -36,6 +36,7 @@ nest-crud/
 
 ```bash
 cd backend
+docker compose up -d
 pnpm install
 pnpm db:generate
 pnpm db:push
@@ -61,7 +62,7 @@ Frontend: `http://localhost:3001`
 `backend/.env`:
 
 ```env
-DATABASE_URL="file:./dev.db"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/nestcrud?schema=public"
 PORT=3002
 SWAGGER_PATH=docs
 ```
@@ -157,13 +158,16 @@ pnpm start:dev
 
 ve `http://localhost:3002/api/users` adresini kontrol et.
 
-### `The table main.User does not exist`
+### `Prisma db push` required-column hatası
 
-SQLite şeması henüz oluşturulmamıştır:
+Local PostgreSQL veritabanında eski şemaya ait kayıtlar olabilir:
 
 ```bash
 cd backend
 pnpm db:push
+
+# Gerekirse local veriyi silip şemayı baştan kur
+pnpm db:reset
 ```
 
 ## Lisans
