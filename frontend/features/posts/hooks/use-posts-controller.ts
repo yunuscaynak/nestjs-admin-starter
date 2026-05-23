@@ -33,6 +33,7 @@ export function usePostsController({
   );
   const [authorFilter, setAuthorFilter] = useState("all");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const filters = usePostFilters();
   const formState = usePostFormState(authorOptions);
@@ -176,6 +177,34 @@ export function usePostsController({
     }
   }
 
+  async function handleTogglePublish(post: PostRecord) {
+    if (!sessionToken) {
+      return;
+    }
+
+    setError("");
+    setPublishingId(post.id);
+
+    try {
+      await updatePost(apiClient, post.id, {
+        title: post.title,
+        content: post.content,
+        authorId: post.author.id,
+        published: !post.published,
+      });
+
+      await loadPosts();
+    } catch (requestError) {
+      setError(
+        requestError instanceof Error
+          ? requestError.message
+          : "Post yayin durumu guncellenemedi.",
+      );
+    } finally {
+      setPublishingId(null);
+    }
+  }
+
   const clearDisabled =
     loading &&
     filters.filters.searchInput.trim().length === 0 &&
@@ -197,6 +226,7 @@ export function usePostsController({
     authorFilter,
     clearDisabled,
     drawerOpen,
+    publishingId,
     filterDrawerOpen,
     isEditing: editingId !== null,
     editingId,
@@ -220,6 +250,7 @@ export function usePostsController({
       filters.setPage(1);
     },
     deletePost: handleDeletePost,
+    togglePublish: handleTogglePublish,
     form: {
       ...formState.createForm,
       setTitle: formState.setCreateTitle,

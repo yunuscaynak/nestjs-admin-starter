@@ -65,15 +65,70 @@ export class PostsService {
   }
 
   async findAll(query: ListPostsQueryDto): Promise<PostsListResponse> {
+    return this.findMany(query);
+  }
+
+  async publicFindAll(query: ListPostsQueryDto): Promise<PostsListResponse> {
+    return this.findMany(query, { publishedOnly: true });
+  }
+
+  async publicFindOne(id: string): Promise<PostRecord> {
+    return this.findOneById(id, { publishedOnly: true });
+  }
+
+  async findOne(id: string): Promise<PostRecord> {
+    return this.findOneById(id);
+  }
+
+  async update(id: string, updatePostDto: UpdatePostDto): Promise<PostRecord> {
+    await this.findOne(id);
+
+    if (updatePostDto.authorId) {
+      await this.ensureUserExists(updatePostDto.authorId);
+    }
+
+    try {
+      return await this.prisma.post.update({
+        where: { id },
+        data: updatePostDto,
+        select: POST_PUBLIC_SELECT,
+      });
+    } catch (error) {
+      this.handlePrismaError(error);
+    }
+  }
+
+  async remove(id: string): Promise<PostRecord> {
+    await this.findOne(id);
+
+    try {
+      return await this.prisma.post.delete({
+        where: { id },
+        select: POST_PUBLIC_SELECT,
+      });
+    } catch (error) {
+      this.handlePrismaError(error);
+    }
+  }
+
+  private async findMany(
+    query: ListPostsQueryDto,
+    options?: {
+      publishedOnly?: boolean;
+    },
+  ): Promise<PostsListResponse> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 20;
     const sort = query.sort ?? PostSortOption.CreatedAtDesc;
     const searchQuery = query.q;
     const skip = (page - 1) * limit;
+    const publishedOnly = options?.publishedOnly ?? false;
 
     const where: Prisma.PostWhereInput = {
       ...(query.authorId ? { authorId: query.authorId } : {}),
-      ...(typeof query.published === 'boolean'
+      ...(publishedOnly
+        ? { published: true }
+        : typeof query.published === 'boolean'
         ? { published: query.published }
         : {}),
       ...(searchQuery
@@ -112,7 +167,7 @@ export class PostsService {
           page,
           pageSize: limit,
           total,
-          totalPages: Math.ceil(total / limit),
+          totalPages: total === 0 ? 0 : Math.ceil(total / limit),
         },
       };
     } catch (error) {
@@ -120,10 +175,18 @@ export class PostsService {
     }
   }
 
-  async findOne(id: string): Promise<PostRecord> {
+  private async findOneById(
+    id: string,
+    options?: {
+      publishedOnly?: boolean;
+    },
+  ): Promise<PostRecord> {
     try {
-      const post = await this.prisma.post.findUnique({
-        where: { id },
+      const post = await this.prisma.post.findFirst({
+        where: {
+          id,
+          ...(options?.publishedOnly ? { published: true } : {}),
+        },
         select: POST_PUBLIC_SELECT,
       });
 
@@ -132,37 +195,6 @@ export class PostsService {
       }
 
       return post;
-    } catch (error) {
-      this.handlePrismaError(error);
-    }
-  }
-
-  async update(id: string, updatePostDto: UpdatePostDto): Promise<PostRecord> {
-    await this.findOne(id);
-
-    if (updatePostDto.authorId) {
-      await this.ensureUserExists(updatePostDto.authorId);
-    }
-
-    try {
-      return await this.prisma.post.update({
-        where: { id },
-        data: updatePostDto,
-        select: POST_PUBLIC_SELECT,
-      });
-    } catch (error) {
-      this.handlePrismaError(error);
-    }
-  }
-
-  async remove(id: string): Promise<PostRecord> {
-    await this.findOne(id);
-
-    try {
-      return await this.prisma.post.delete({
-        where: { id },
-        select: POST_PUBLIC_SELECT,
-      });
     } catch (error) {
       this.handlePrismaError(error);
     }

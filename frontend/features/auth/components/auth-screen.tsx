@@ -2,6 +2,7 @@ import {
   faRightToBracket,
   faUserPlus,
 } from "@fortawesome/free-solid-svg-icons";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -78,6 +79,14 @@ export function AuthScreen({
               <Badge className="border-[rgba(238,238,238,0.12)] bg-[rgba(34,40,49,0.42)] text-foreground">
                 Role tabanli yetki
               </Badge>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Link
+                href="/posts"
+                className="inline-flex h-11 items-center justify-center rounded-full border border-[rgba(238,238,238,0.16)] bg-[rgba(34,40,49,0.38)] px-5 text-sm font-semibold text-foreground transition hover:bg-[rgba(34,40,49,0.58)]"
+              >
+                Public postlari incele
+              </Link>
             </div>
           </CardContent>
         </Card>

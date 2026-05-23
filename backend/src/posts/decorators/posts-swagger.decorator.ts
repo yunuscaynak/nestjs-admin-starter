@@ -159,6 +159,59 @@ export function ApiFindAllPosts() {
   );
 }
 
+export function ApiFindAllPublicPosts() {
+  return applyDecorators(
+    ApiOperation({
+      summary: 'Yayinlanmis postlari herkese acik listele',
+      description:
+        'Sadece published=true olan postlari sayfalama ve arama ile dondurur.',
+    }),
+    ApiQuery({
+      name: 'page',
+      required: false,
+      type: Number,
+      example: 1,
+      description: 'Sayfa numarasi.',
+    }),
+    ApiQuery({
+      name: 'limit',
+      required: false,
+      type: Number,
+      example: 12,
+      description: 'Sayfa basina kayit sayisi.',
+    }),
+    ApiQuery({
+      name: 'q',
+      required: false,
+      type: String,
+      example: 'nestjs',
+      description: 'Baslik veya icerik uzerinde arama.',
+    }),
+    ApiQuery({
+      name: 'authorId',
+      required: false,
+      type: String,
+      example: 'cmab12cd30000xyz123456789',
+      description: 'Belirli bir yazarin yayinlanmis postlarini filtreler.',
+    }),
+    ApiQuery({
+      name: 'sort',
+      required: false,
+      enum: PostSortOption,
+      enumName: 'PostSortOption',
+      example: PostSortOption.CreatedAtDesc,
+      description: 'Siralama bicimi.',
+    }),
+    ApiOkResponse({
+      description: 'Yayinlanmis post listesi donduruldu.',
+      type: PostResponseDto,
+      isArray: true,
+    }),
+    ApiQueryOrBodyValidationError(),
+    ApiDbUnavailable(),
+  );
+}
+
 export function ApiFindOnePost() {
   return applyDecorators(
     ApiAdminAuth(),
@@ -174,6 +227,26 @@ export function ApiFindOnePost() {
     ApiPathParamValidationError(),
     ApiNotFoundResponse({
       description: 'Post bulunamadi.',
+      type: HttpErrorResponseDto,
+    }),
+    ApiDbUnavailable(),
+  );
+}
+
+export function ApiFindOnePublicPost() {
+  return applyDecorators(
+    ApiOperation({
+      summary: 'Yayinlanmis tek post getir',
+      description: 'Verilen id ile yayinlanmis bir post kaydi doner.',
+    }),
+    ApiPostIdParam('Detayi istenen yayinlanmis postun ID degeri.'),
+    ApiOkResponse({
+      description: 'Yayinlanmis post bulundu.',
+      type: PostResponseDto,
+    }),
+    ApiPathParamValidationError(),
+    ApiNotFoundResponse({
+      description: 'Yayinlanmis post bulunamadi.',
       type: HttpErrorResponseDto,
     }),
     ApiDbUnavailable(),

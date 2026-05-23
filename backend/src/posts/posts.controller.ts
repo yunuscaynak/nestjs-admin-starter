@@ -10,11 +10,14 @@ import {
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
+import { Public } from '../auth/decorators/public.decorator';
 import { Roles } from '../auth/decorators/roles.decorator';
 import {
   ApiCreatePost,
   ApiFindAllPosts,
+  ApiFindAllPublicPosts,
   ApiFindOnePost,
+  ApiFindOnePublicPost,
   ApiRemovePost,
   ApiUpdatePost,
 } from './decorators/posts-swagger.decorator';
@@ -39,10 +42,24 @@ export class PostsController {
     return this.postsService.create(createPostDto);
   }
 
+  @Public()
+  @ApiFindAllPublicPosts()
+  @Get('public')
+  findPublic(@Query() query: ListPostsQueryDto): Promise<PostsListResponse> {
+    return this.postsService.publicFindAll(query);
+  }
+
   @ApiFindAllPosts()
   @Get()
   findAll(@Query() query: ListPostsQueryDto): Promise<PostsListResponse> {
     return this.postsService.findAll(query);
+  }
+
+  @Public()
+  @ApiFindOnePublicPost()
+  @Get('public/:id')
+  findPublicOne(@Param('id') id: string): Promise<PostRecord> {
+    return this.postsService.publicFindOne(id);
   }
 
   @ApiFindOnePost()
