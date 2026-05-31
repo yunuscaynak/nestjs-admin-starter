@@ -32,21 +32,20 @@ nestjs-admin-starter/
 
 ## Quick Start
 
-### 1) Start PostgreSQL
-
-```bash
-cd backend
-docker compose up -d
-cd ..
-```
-
-### 2) Install everything and prepare Prisma
+### 1) Start backend dependencies and prepare Prisma
 
 ```bash
 pnpm setup
 ```
 
-### 3) Run backend and frontend
+This command now:
+
+- installs workspace dependencies
+- starts PostgreSQL with Docker Compose
+- generates the Prisma client
+- pushes the Prisma schema
+
+### 2) Run backend and frontend
 
 In separate terminals:
 
@@ -59,6 +58,12 @@ Or run both together from the root:
 
 ```bash
 pnpm dev
+```
+
+If you want a single command that also starts PostgreSQL and then launches the backend dev server:
+
+```bash
+pnpm backend:up
 ```
 
 Backend default: `http://localhost:3002`  
@@ -90,9 +95,12 @@ From the project root:
 
 ```bash
 pnpm setup
+pnpm backend:up
 pnpm dev
 pnpm dev:backend
 pnpm dev:frontend
+pnpm db:start
+pnpm db:stop
 pnpm lint
 pnpm test
 pnpm build
