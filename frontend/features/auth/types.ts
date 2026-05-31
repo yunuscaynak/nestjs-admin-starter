@@ -36,4 +36,5 @@ export type StoredSession = {
   accessTokenExpiresAt: string;
   refreshTokenExpiresAt: string;
   rememberMe: boolean;
+  authenticatedAt?: string;
 };

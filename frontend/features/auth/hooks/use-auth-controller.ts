@@ -25,6 +25,7 @@ export function useAuthController() {
   const [authMode, setAuthMode] = useState<"login" | "register">("login");
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [refreshToken, setRefreshToken] = useState<string | null>(null);
+  const [sessionInfo, setSessionInfo] = useState<StoredSession | null>(null);
   const [currentUser, setCurrentUser] = useState<UserRecord | null>(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [isSubmittingAuth, setIsSubmittingAuth] = useState(false);
@@ -38,13 +39,17 @@ export function useAuthController() {
     showPassword: false,
   });
 
-  const persistSession = useCallback((payload: AuthResponse) => {
+  const persistSession = useCallback((
+    payload: AuthResponse,
+    options?: { authenticatedAt?: string },
+  ) => {
     const session: StoredSession = {
       accessToken: payload.accessToken,
       refreshToken: payload.refreshToken,
       accessTokenExpiresAt: payload.accessTokenExpiresAt,
       refreshTokenExpiresAt: payload.refreshTokenExpiresAt,
       rememberMe: payload.rememberMe,
+      authenticatedAt: options?.authenticatedAt ?? new Date().toISOString(),
     };
 
     window.localStorage.removeItem(SESSION_STORAGE_KEY);
@@ -56,6 +61,7 @@ export function useAuthController() {
 
     setSessionToken(payload.accessToken);
     setRefreshToken(payload.refreshToken);
+    setSessionInfo(session);
     setCurrentUser(payload.user);
   }, []);
 
@@ -64,6 +70,7 @@ export function useAuthController() {
     window.sessionStorage.removeItem(SESSION_STORAGE_KEY);
     setSessionToken(null);
     setRefreshToken(null);
+    setSessionInfo(null);
     setCurrentUser(null);
   }, []);
 
@@ -77,10 +84,12 @@ export function useAuthController() {
       clearSession,
     });
     const data = await refreshAuthSession(refreshClient, token);
-    persistSession(data);
+    persistSession(data, {
+      authenticatedAt: sessionInfo?.authenticatedAt ?? new Date().toISOString(),
+    });
 
     return data;
-  }, [clearSession, persistSession]);
+  }, [clearSession, persistSession, sessionInfo?.authenticatedAt]);
 
   const fetchMe = useCallback(async (token: string) => {
     const apiClient = createHttpClient({
@@ -114,6 +123,8 @@ export function useAuthController() {
         setAuthLoading(false);
         return;
       }
+
+      setSessionInfo(storedSession);
 
       void fetchMe(storedSession.accessToken)
         .catch(async () => {
@@ -195,6 +206,7 @@ export function useAuthController() {
     authError,
     submitAuth,
     sessionToken,
+    sessionInfo,
     apiClient,
     handleLogout,
     authForm: {
