@@ -15,6 +15,7 @@ describe('PostsService', () => {
       create: jest.fn(),
       findMany: jest.fn(),
       count: jest.fn(),
+      findFirst: jest.fn(),
       findUnique: jest.fn(),
       update: jest.fn(),
       delete: jest.fn(),
@@ -169,17 +170,19 @@ describe('PostsService', () => {
   it('findOne kayit varsa postu dondurur', async () => {
     const post = { id: 'post-1', title: 'Test baslik' };
 
-    prismaMock.post.findUnique.mockResolvedValue(post);
+    prismaMock.post.findFirst.mockResolvedValue(post);
 
     await expect(service.findOne('post-1')).resolves.toEqual(post);
-    expect(prismaMock.post.findUnique).toHaveBeenCalledWith({
-      where: { id: 'post-1' },
+    expect(prismaMock.post.findFirst).toHaveBeenCalledWith({
+      where: {
+        id: 'post-1',
+      },
       select: POST_PUBLIC_SELECT,
     });
   });
 
   it('findOne kayit yoksa NotFoundException firlatir', async () => {
-    prismaMock.post.findUnique.mockResolvedValue(null);
+    prismaMock.post.findFirst.mockResolvedValue(null);
 
     await expect(service.findOne('missing-post')).rejects.toBeInstanceOf(
       NotFoundException,
@@ -196,7 +199,7 @@ describe('PostsService', () => {
       title: 'Yeni baslik',
     };
 
-    prismaMock.post.findUnique.mockResolvedValue(existingPost);
+    prismaMock.post.findFirst.mockResolvedValue(existingPost);
     prismaMock.user.findUnique.mockResolvedValue({ id: 'user-2' });
     prismaMock.post.update.mockResolvedValue(updatedPost);
 
@@ -231,7 +234,7 @@ describe('PostsService', () => {
       title: 'Silinecek post',
     };
 
-    prismaMock.post.findUnique.mockResolvedValue(existingPost);
+    prismaMock.post.findFirst.mockResolvedValue(existingPost);
     prismaMock.post.delete.mockResolvedValue(deletedPost);
 
     await expect(service.remove('post-1')).resolves.toEqual(deletedPost);

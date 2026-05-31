@@ -129,8 +129,8 @@ export class PostsService {
       ...(publishedOnly
         ? { published: true }
         : typeof query.published === 'boolean'
-        ? { published: query.published }
-        : {}),
+          ? { published: query.published }
+          : {}),
       ...(searchQuery
         ? {
             OR: [

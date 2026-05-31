@@ -86,8 +86,10 @@ export function useUsersController({
       return;
     }
 
-    void loadUsers();
-    void loadAuthorOptions();
+    queueMicrotask(() => {
+      void loadUsers();
+      void loadAuthorOptions();
+    });
   }, [isAdmin, loadAuthorOptions, loadUsers]);
 
   async function handleCreateUser(event: React.FormEvent<HTMLFormElement>) {

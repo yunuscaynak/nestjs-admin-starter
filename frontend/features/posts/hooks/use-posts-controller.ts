@@ -86,7 +86,9 @@ export function usePostsController({
       return;
     }
 
-    void loadPosts();
+    queueMicrotask(() => {
+      void loadPosts();
+    });
   }, [isAdmin, loadPosts]);
 
   useEffect(() => {

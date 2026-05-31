@@ -107,27 +107,29 @@ export function useAuthController() {
   );
 
   useEffect(() => {
-    const storedSession = readStoredSession();
+    queueMicrotask(() => {
+      const storedSession = readStoredSession();
 
-    if (!storedSession) {
-      setAuthLoading(false);
-      return;
-    }
-
-    void fetchMe(storedSession.accessToken)
-      .catch(async () => {
-        try {
-          const refreshedSession = await refreshSession(
-            storedSession.refreshToken,
-          );
-          await fetchMe(refreshedSession.accessToken);
-        } catch {
-          clearSession();
-        }
-      })
-      .finally(() => {
+      if (!storedSession) {
         setAuthLoading(false);
-      });
+        return;
+      }
+
+      void fetchMe(storedSession.accessToken)
+        .catch(async () => {
+          try {
+            const refreshedSession = await refreshSession(
+              storedSession.refreshToken,
+            );
+            await fetchMe(refreshedSession.accessToken);
+          } catch {
+            clearSession();
+          }
+        })
+        .finally(() => {
+          setAuthLoading(false);
+        });
+    });
   }, [clearSession, fetchMe, refreshSession]);
 
   async function submitAuth(event: React.FormEvent<HTMLFormElement>) {
