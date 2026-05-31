@@ -27,34 +27,43 @@ nestjs-admin-starter/
 ## Requirements
 
 - Node.js 20+
-- pnpm (for the backend)
-- npm (for the frontend)
+- pnpm 10+
+- Docker
 
 ## Quick Start
 
-### 1) Set up the backend and prepare the database
+### 1) Start PostgreSQL
 
 ```bash
 cd backend
 docker compose up -d
-pnpm install
-pnpm db:generate
-pnpm db:push
-pnpm start:dev
+cd ..
+```
+
+### 2) Install everything and prepare Prisma
+
+```bash
+pnpm setup
+```
+
+### 3) Run backend and frontend
+
+In separate terminals:
+
+```bash
+pnpm dev:backend
+pnpm dev:frontend
+```
+
+Or run both together from the root:
+
+```bash
+pnpm dev
 ```
 
 Backend default: `http://localhost:3002`  
 API: `http://localhost:3002/api`  
-Swagger: `http://localhost:3002/docs`
-
-### 2) Run the frontend
-
-```bash
-cd frontend
-npm install
-npm run dev -- --port 3000
-```
-
+Swagger: `http://localhost:3002/docs`  
 Frontend: `http://localhost:3000`
 
 ## Environment Variables
@@ -67,33 +76,36 @@ PORT=3002
 SWAGGER_PATH=docs
 ```
 
-If needed, you can override the API base URL for the frontend:
+Frontend API base URL:
 
-`frontend/.env.local`
+`frontend/.env`
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:3002/api
 ```
 
-## Makefile Usage
+## Workspace Scripts
 
 From the project root:
 
 ```bash
-make install
-make db-generate
-make db-push
-make backend
-make frontend
+pnpm setup
+pnpm dev
+pnpm dev:backend
+pnpm dev:frontend
+pnpm lint
+pnpm test
+pnpm build
+pnpm check
 ```
 
-From inside the backend directory:
+The repository now uses a single `pnpm` workspace and a shared root lockfile.
 
-```bash
-make install
-make setup
-make backend
-```
+## Git Hooks and CI
+
+- `pnpm install` runs `husky` setup automatically.
+- `.husky/pre-commit` runs `pnpm lint` and `pnpm test`.
+- GitHub Actions CI runs install, Prisma client generation, lint, test, and build on every push and pull request.
 
 ## Backend Scripts
 

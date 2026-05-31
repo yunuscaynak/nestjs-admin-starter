@@ -1,0 +1,27 @@
+{
+  "name": "nestjs-admin-starter",
+  "version": "0.1.0",
+  "private": true,
+  "license": "UNLICENSED",
+  "packageManager": "pnpm@10.33.0+sha512.10568bb4a6afb58c9eb3630da90cc9516417abebd3fabbe6739f0ae795728da1491e9db5a544c76ad8eb7570f5c4bb3d6c637b2cb41bfdcdb47fa823c8649319",
+  "scripts": {
+    "prepare": "husky",
+    "setup": "pnpm install && pnpm db:generate && pnpm db:push",
+    "dev": "pnpm --parallel --stream --filter ./backend --filter ./frontend run dev",
+    "dev:backend": "pnpm --filter ./backend run dev",
+    "dev:frontend": "pnpm --filter ./frontend run dev",
+    "build": "pnpm -r run build",
+    "lint": "pnpm -r run lint",
+    "test": "pnpm --filter ./backend run test",
+    "test:e2e": "pnpm --filter ./backend run test:e2e",
+    "check": "pnpm lint && pnpm test && pnpm build",
+    "db:generate": "pnpm --filter ./backend run db:generate",
+    "db:push": "pnpm --filter ./backend run db:push",
+    "db:migrate": "pnpm --filter ./backend run db:migrate",
+    "db:reset": "pnpm --filter ./backend run db:reset",
+    "db:studio": "pnpm --filter ./backend run db:studio"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}
