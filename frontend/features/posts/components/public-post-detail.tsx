@@ -19,14 +19,14 @@ export function PublicPostDetail({ post }: PublicPostDetailProps) {
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Link
           href="/posts"
-          className="inline-flex h-11 items-center justify-center rounded-full border border-(--line) bg-[rgba(34,40,49,0.48)] px-5 text-sm font-semibold text-(--ink) transition hover:bg-[rgba(57,62,70,0.92)]"
+          className="inline-flex h-11 items-center justify-center rounded-xl border border-(--line) bg-[var(--panel-deep)] px-5 text-sm font-semibold text-(--ink) transition hover:bg-[var(--panel-soft)]"
         >
           Tum yazilara don
         </Link>
         <Badge>Yayinlanmis post</Badge>
       </div>
 
-      <Card className="overflow-hidden bg-[linear-gradient(165deg,rgba(57,62,70,0.96),rgba(34,40,49,0.82))]">
+      <Card className="overflow-hidden">
         <CardContent className="space-y-10 p-8 md:p-12">
           <header className="space-y-6">
             <div className="flex flex-wrap items-center gap-3 text-sm text-(--ink-muted)">

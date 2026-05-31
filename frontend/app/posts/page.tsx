@@ -26,14 +26,13 @@ export default async function PostsPage({ searchParams }: PostsPageProps) {
   });
 
   return (
-    <main className="relative min-h-screen bg-[radial-gradient(circle_at_top,rgba(0,173,181,0.16),transparent_26%),radial-gradient(circle_at_bottom_left,rgba(57,62,70,0.24),transparent_26%),linear-gradient(180deg,#1D232B_0%,#222831_52%,#393E46_100%)]">
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(238,238,238,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(238,238,238,0.04)_1px,transparent_1px)] bg-size-[40px_40px] opacity-60" />
-      <div className="relative">
+    <main className="min-h-screen bg-[var(--background)]">
+      <div>
         <div className="mx-auto flex w-full max-w-7xl justify-between gap-3 px-4 pt-6 md:px-8">
-          <Badge className="bg-[rgba(34,40,49,0.5)]">Content Surface</Badge>
+          <Badge>Content Surface</Badge>
           <Link
             href="/"
-            className="inline-flex h-11 items-center justify-center rounded-full border border-[var(--line)] bg-[rgba(34,40,49,0.48)] px-5 text-sm font-semibold text-(--ink) transition hover:bg-[rgba(57,62,70,0.92)]"
+            className="inline-flex h-11 items-center justify-center rounded-xl border border-[var(--line)] bg-[var(--panel-deep)] px-5 text-sm font-semibold text-(--ink) transition hover:bg-[var(--panel-soft)]"
           >
             Admin girisi
           </Link>

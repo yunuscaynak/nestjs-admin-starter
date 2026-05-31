@@ -6,15 +6,15 @@ type ButtonSize = "default" | "sm" | "icon";
 
 const variantStyles: Record<ButtonVariant, string> = {
   default:
-    "bg-[var(--accent)] text-[var(--accent-foreground)] shadow-[0_12px_30px_rgba(0,173,181,0.25)] hover:bg-[var(--accent-strong)]",
+    "bg-[var(--accent)] text-[var(--accent-foreground)] shadow-[0_10px_24px_rgba(14,165,233,0.22)] hover:bg-[var(--accent-strong)]",
   secondary:
-    "bg-[var(--panel-soft)] text-[var(--ink)] hover:bg-[var(--panel)]",
+    "bg-[var(--panel-soft)] text-[var(--ink)] hover:bg-[var(--panel-muted)]",
   outline:
-    "border border-[var(--line)] bg-[rgba(57,62,70,0.72)] text-[var(--ink)] hover:bg-[rgba(57,62,70,0.92)]",
+    "border border-[var(--line)] bg-[var(--panel-deep)] text-[var(--ink)] hover:border-[var(--line-strong)] hover:bg-[var(--panel-soft)]",
   destructive:
     "bg-[var(--danger)] text-white hover:bg-[var(--danger-strong)]",
   ghost:
-    "bg-transparent text-[var(--ink-muted)] hover:bg-[rgba(57,62,70,0.72)] hover:text-[var(--ink)]",
+    "bg-transparent text-[var(--ink-muted)] hover:bg-[var(--panel-soft)] hover:text-[var(--ink)]",
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
@@ -39,7 +39,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         type={type}
         className={cn(
-          "inline-flex items-center justify-center gap-2 rounded-full font-semibold transition disabled:pointer-events-none disabled:opacity-50",
+          "inline-flex items-center justify-center gap-2 rounded-xl font-semibold transition disabled:pointer-events-none disabled:opacity-50",
           variantStyles[variant],
           sizeStyles[size],
           className,

@@ -63,7 +63,7 @@ export function PostsPanel({
 
   return (
     <>
-      <Card className="overflow-hidden bg-[linear-gradient(180deg,rgba(57,62,70,0.92),rgba(34,40,49,0.9))]">
+      <Card className="overflow-hidden">
         <CardContent className="p-5 md:p-6">
         <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="space-y-2">
@@ -81,13 +81,13 @@ export function PostsPanel({
         </div>
 
         {posts.error ? (
-          <p className="mb-4 rounded-2xl border border-[rgba(166,41,41,0.15)] bg-[rgba(166,41,41,0.08)] px-4 py-3 text-sm font-medium text-(--danger)">
+          <p className="mb-4 rounded-xl border border-[rgba(248,113,113,0.24)] bg-[rgba(127,29,29,0.26)] px-4 py-3 text-sm font-medium text-(--danger)">
             {posts.error}
           </p>
         ) : null}
 
         <div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <article className="rounded-[26px] border border-[rgba(0,173,181,0.18)] bg-[linear-gradient(135deg,rgba(0,173,181,0.16),rgba(34,40,49,0.5))] p-4">
+          <article className="rounded-2xl border border-[var(--line)] bg-[var(--panel-deep)] p-4">
             <p className="text-[11px] uppercase tracking-[0.22em] text-(--ink-muted)">
               Toplam post
             </p>
@@ -95,19 +95,19 @@ export function PostsPanel({
               {posts.loading ? "..." : posts.total}
             </p>
           </article>
-          <article className="rounded-[26px] border border-(--line) bg-[rgba(34,40,49,0.64)] p-4">
+          <article className="rounded-2xl border border-(--line) bg-[var(--panel-deep)] p-4">
             <p className="text-[11px] uppercase tracking-[0.22em] text-(--ink-muted)">
               Sayfa
             </p>
             <p className="mt-3 font-serif text-3xl text-(--ink)">{posts.page}</p>
           </article>
-          <article className="rounded-[26px] border border-(--line) bg-[rgba(34,40,49,0.64)] p-4">
+          <article className="rounded-2xl border border-(--line) bg-[var(--panel-deep)] p-4">
             <p className="text-[11px] uppercase tracking-[0.22em] text-(--ink-muted)">
               Siralama
             </p>
             <p className="mt-3 text-sm font-medium text-(--ink)">{activeSortLabel}</p>
           </article>
-          <article className="rounded-[26px] border border-(--line) bg-[rgba(34,40,49,0.64)] p-4">
+          <article className="rounded-2xl border border-(--line) bg-[var(--panel-deep)] p-4">
             <p className="text-[11px] uppercase tracking-[0.22em] text-(--ink-muted)">
               Durum
             </p>
@@ -123,7 +123,7 @@ export function PostsPanel({
 
         <div className="grid gap-4 md:grid-cols-2 2xl:grid-cols-3">
           {!posts.loading && posts.items.length === 0 ? (
-            <p className="rounded-3xl border border-dashed border-(--line) bg-[rgba(34,40,49,0.6)] px-5 py-8 text-center text-sm text-(--ink-muted) md:col-span-2 2xl:col-span-3">
+            <p className="rounded-2xl border border-dashed border-(--line) bg-[var(--panel-deep)] px-5 py-8 text-center text-sm text-(--ink-muted) md:col-span-2 2xl:col-span-3">
               Bu filtrelere uygun post yok.
             </p>
           ) : null}
@@ -134,11 +134,8 @@ export function PostsPanel({
             return (
               <article
                 key={post.id}
-                className="group relative flex h-full flex-col overflow-hidden rounded-4xl border border-[rgba(238,238,238,0.08)] bg-[linear-gradient(160deg,rgba(255,255,255,0.06),rgba(255,255,255,0.02)_28%,rgba(34,40,49,0.96)_72%),radial-gradient(circle_at_top_left,rgba(0,173,181,0.16),transparent_34%)] p-5 shadow-[0_24px_60px_rgba(0,0,0,0.24)] transition duration-300 hover:-translate-y-1 hover:border-[rgba(0,173,181,0.34)]"
+                className="group relative flex h-full flex-col overflow-hidden rounded-[22px] border border-[var(--line)] bg-[var(--panel-deep)] p-5 transition duration-200 hover:border-[var(--line-strong)]"
               >
-                <div className="absolute inset-x-8 top-0 h-px bg-[linear-gradient(90deg,transparent,rgba(0,173,181,0.9),transparent)] opacity-0 transition group-hover:opacity-100" />
-                <div className="absolute -right-12 -top-12 h-32 w-32 rounded-full bg-[rgba(0,173,181,0.12)] blur-2xl transition duration-300 group-hover:bg-[rgba(0,173,181,0.22)]" />
-
                 <div className="relative space-y-5">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex flex-wrap items-center gap-2">
@@ -150,7 +147,7 @@ export function PostsPanel({
                       variant={post.published ? "secondary" : "default"}
                       size="sm"
                       className={post.published
-                        ? "px-4 text-xs whitespace-nowrap border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.1)]"
+                        ? "whitespace-nowrap border border-[var(--line)] bg-[var(--panel)] px-4 text-xs hover:bg-[var(--panel-soft)]"
                         : "px-4 text-xs whitespace-nowrap"}
                       disabled={posts.loading || posts.publishingId === post.id}
                       onClick={() => void posts.togglePublish(post)}
@@ -185,12 +182,12 @@ export function PostsPanel({
 
                 <div className="relative mt-auto pt-6">
                   <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                    <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-4">
                       <p className="text-[10px] uppercase tracking-[0.24em] text-(--ink-muted)">
                         Yazar
                       </p>
                       <div className="mt-3 flex items-center gap-3">
-                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[rgba(255,255,255,0.12)] bg-[linear-gradient(135deg,rgba(0,173,181,0.24),rgba(255,255,255,0.05))] font-serif text-sm text-(--ink)">
+                        <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-[var(--line)] bg-[var(--panel-soft)] font-serif text-sm text-(--ink)">
                           {getInitials(post.author)}
                         </div>
                         <div className="min-w-0">
@@ -203,7 +200,7 @@ export function PostsPanel({
                         </div>
                       </div>
                     </div>
-                    <div className="rounded-3xl border border-[rgba(255,255,255,0.08)] bg-[linear-gradient(180deg,rgba(255,255,255,0.05),rgba(255,255,255,0.02))] px-4 py-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+                    <div className="rounded-2xl border border-[var(--line)] bg-[var(--panel)] px-4 py-4">
                       <p className="text-[10px] uppercase tracking-[0.24em] text-(--ink-muted)">
                         Yayin zamani
                       </p>
@@ -219,7 +216,7 @@ export function PostsPanel({
                   <div className="relative mt-6 flex flex-wrap gap-3 border-t border-[rgba(255,255,255,0.08)] pt-4">
                     <Button
                       variant="secondary"
-                      className="min-w-35 flex-1 border border-[rgba(255,255,255,0.08)] bg-[rgba(255,255,255,0.06)] hover:bg-[rgba(255,255,255,0.1)]"
+                      className="min-w-35 flex-1 border border-[var(--line)] bg-[var(--panel)] hover:bg-[var(--panel-soft)]"
                       disabled={posts.publishingId === post.id}
                       onClick={() => posts.beginEdit(post)}
                     >
@@ -227,7 +224,7 @@ export function PostsPanel({
                     </Button>
                     <Button
                       variant="destructive"
-                      className="min-w-35 flex-1 shadow-[0_14px_26px_rgba(166,41,41,0.22)]"
+                      className="min-w-35 flex-1"
                       disabled={posts.publishingId === post.id}
                       onClick={() => void posts.deletePost(post.id)}
                     >

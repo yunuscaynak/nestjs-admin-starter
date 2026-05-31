@@ -36,9 +36,8 @@ export default async function PostDetailPage({ params }: PostDetailPageProps) {
   }
 
   return (
-    <main className="relative min-h-screen bg-[radial-gradient(circle_at_top_right,rgba(0,173,181,0.16),transparent_24%),radial-gradient(circle_at_bottom_left,rgba(57,62,70,0.24),transparent_26%),linear-gradient(180deg,#1D232B_0%,#222831_52%,#393E46_100%)]">
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(238,238,238,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(238,238,238,0.04)_1px,transparent_1px)] bg-size-[40px_40px] opacity-60" />
-      <div className="relative">
+    <main className="min-h-screen bg-[var(--background)]">
+      <div>
         <PublicPostDetail post={post} />
       </div>
     </main>

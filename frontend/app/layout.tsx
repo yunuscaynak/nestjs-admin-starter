@@ -1,9 +1,16 @@
 import type { Metadata } from "next";
+import { Quicksand } from "next/font/google";
 import "./globals.css";
 
+const quicksand = Quicksand({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-quicksand",
+});
+
 export const metadata: Metadata = {
-  title: "Nest CRUD Frontend",
-  description: "Basit kullanıcı CRUD arayüzü",
+  title: "Admin Starter UI",
+  description: "NestJS tabanli admin starter arayuzu",
 };
 
 export default function RootLayout({
@@ -13,7 +20,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="tr" suppressHydrationWarning>
-      <body suppressHydrationWarning>{children}</body>
+      <body className={quicksand.variable} suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

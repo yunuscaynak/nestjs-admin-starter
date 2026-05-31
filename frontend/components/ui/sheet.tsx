@@ -15,13 +15,13 @@ export function Sheet({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex justify-end bg-[rgba(34,40,49,0.6)] backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex justify-end bg-[rgba(15,23,42,0.72)] backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       onClick={onClose}
     >
       <aside
-        className="h-full w-full max-w-xl overflow-y-auto border-l border-[var(--line)] bg-[linear-gradient(180deg,rgba(57,62,70,0.98),rgba(34,40,49,0.98))] p-6 shadow-[-24px_0_80px_rgba(0,0,0,0.35)]"
+        className="h-full w-full max-w-xl overflow-y-auto border-l border-[var(--line)] bg-[var(--panel)] p-6 shadow-[-24px_0_80px_rgba(2,6,23,0.42)]"
         onClick={(event) => event.stopPropagation()}
       >
         {children}

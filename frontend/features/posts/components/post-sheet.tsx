@@ -78,7 +78,7 @@ export function PostSheet({
       </SheetHeader>
 
       {error ? (
-        <p className="mb-4 rounded-2xl border border-[rgba(166,41,41,0.15)] bg-[rgba(166,41,41,0.08)] px-4 py-3 text-sm font-medium text-(--danger)">
+        <p className="mb-4 rounded-xl border border-[rgba(248,113,113,0.24)] bg-[rgba(127,29,29,0.26)] px-4 py-3 text-sm font-medium text-(--danger)">
           {error}
         </p>
       ) : null}
