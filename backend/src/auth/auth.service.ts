@@ -3,12 +3,17 @@ import {
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
 import { Role } from '@prisma/client';
 import {
+  ACCESS_TOKEN_EXPIRES_IN_SECONDS,
+  JWT_REFRESH_SECRET,
+  JWT_SECRET,
   REFRESH_TOKEN_EXPIRES_IN_SECONDS,
   REFRESH_TOKEN_REMEMBER_ME_EXPIRES_IN_SECONDS,
 } from './auth.constants';
 import { PrismaService } from '../prisma/prisma.service';
+import { JwtPayload } from './auth.types';
 import {
   PUBLIC_USER_SELECT,
   type PublicUserRecord,
@@ -16,7 +21,6 @@ import {
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
-import { JwtService } from './jwt.service';
 import { hashPassword, verifyPassword } from './auth.utils';
 
 export type AuthResponse = {
@@ -97,7 +101,7 @@ export class AuthService {
   }
 
   async refresh({ refreshToken }: RefreshTokenDto): Promise<AuthResponse> {
-    const payload = this.jwtService.verify(refreshToken, 'refresh');
+    const payload = await this.verifyRefreshToken(refreshToken);
 
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
@@ -130,7 +134,7 @@ export class AuthService {
   }
 
   async logout({ refreshToken }: RefreshTokenDto): Promise<{ success: true }> {
-    const payload = this.jwtService.verify(refreshToken, 'refresh');
+    const payload = await this.verifyRefreshToken(refreshToken);
 
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
@@ -170,11 +174,11 @@ export class AuthService {
     user: PublicUserRecord & { role: Role },
     rememberMe: boolean,
   ): Promise<AuthResponse> {
-    const accessTokenExpiresInSeconds = 60 * 15;
+    const accessTokenExpiresInSeconds = ACCESS_TOKEN_EXPIRES_IN_SECONDS;
     const refreshTokenExpiresInSeconds = rememberMe
       ? REFRESH_TOKEN_REMEMBER_ME_EXPIRES_IN_SECONDS
       : REFRESH_TOKEN_EXPIRES_IN_SECONDS;
-    const accessToken = this.jwtService.sign(
+    const accessToken = await this.jwtService.signAsync(
       {
         sub: user.id,
         email: user.email,
@@ -182,9 +186,12 @@ export class AuthService {
         tokenType: 'access',
         rememberMe,
       },
-      { expiresInSeconds: accessTokenExpiresInSeconds },
+      {
+        secret: JWT_SECRET,
+        expiresIn: accessTokenExpiresInSeconds,
+      },
     );
-    const refreshToken = this.jwtService.sign(
+    const refreshToken = await this.jwtService.signAsync(
       {
         sub: user.id,
         email: user.email,
@@ -192,7 +199,10 @@ export class AuthService {
         tokenType: 'refresh',
         rememberMe,
       },
-      { expiresInSeconds: refreshTokenExpiresInSeconds },
+      {
+        secret: JWT_REFRESH_SECRET,
+        expiresIn: refreshTokenExpiresInSeconds,
+      },
     );
     const accessTokenExpiresAt = new Date(
       Date.now() + accessTokenExpiresInSeconds * 1000,
@@ -228,5 +238,28 @@ export class AuthService {
         refreshTokenExpiresAt: null,
       },
     });
+  }
+
+  private async verifyRefreshToken(refreshToken: string): Promise<JwtPayload> {
+    try {
+      const payload = await this.jwtService.verifyAsync<JwtPayload>(
+        refreshToken,
+        {
+          secret: JWT_REFRESH_SECRET,
+        },
+      );
+
+      if (payload.tokenType !== 'refresh') {
+        throw new UnauthorizedException('Refresh token gecersiz.');
+      }
+
+      return payload;
+    } catch (error) {
+      if (error instanceof UnauthorizedException) {
+        throw error;
+      }
+
+      throw new UnauthorizedException('Refresh token gecersiz.');
+    }
   }
 }

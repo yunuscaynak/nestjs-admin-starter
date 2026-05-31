@@ -8,8 +8,8 @@ export type JwtPayload = {
   role: Role;
   tokenType: JwtTokenType;
   rememberMe: boolean;
-  iat: number;
-  exp: number;
+  iat?: number;
+  exp?: number;
 };
 
 export type AuthenticatedUser = {

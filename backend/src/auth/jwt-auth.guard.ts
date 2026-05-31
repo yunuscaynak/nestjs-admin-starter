@@ -1,30 +1,23 @@
 import {
-  CanActivate,
   ExecutionContext,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Request } from 'express';
+import { AuthGuard } from '@nestjs/passport';
+import { Observable } from 'rxjs';
 import { IS_PUBLIC_KEY } from './decorators/public.decorator';
-import { JwtService } from './jwt.service';
-
-type AuthenticatedRequest = Request & {
-  user?: {
-    id: string;
-    email: string;
-    role: string;
-  };
-};
+import { AuthenticatedUser } from './auth.types';
 
 @Injectable()
-export class JwtAuthGuard implements CanActivate {
-  constructor(
-    private readonly reflector: Reflector,
-    private readonly jwtService: JwtService,
-  ) {}
+export class JwtAuthGuard extends AuthGuard('jwt') {
+  constructor(private readonly reflector: Reflector) {
+    super();
+  }
 
-  canActivate(context: ExecutionContext): boolean {
+  canActivate(
+    context: ExecutionContext,
+  ): boolean | Promise<boolean> | Observable<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -34,22 +27,19 @@ export class JwtAuthGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest<AuthenticatedRequest>();
-    const authorizationHeader = request.headers.authorization;
+    return super.canActivate(context);
+  }
 
-    if (!authorizationHeader?.startsWith('Bearer ')) {
-      throw new UnauthorizedException('Bearer token gerekli.');
+  handleRequest<TUser extends AuthenticatedUser>(
+    error: unknown,
+    user: TUser | false,
+  ): TUser {
+    if (error || !user) {
+      throw error instanceof UnauthorizedException
+        ? error
+        : new UnauthorizedException('Bearer token gerekli.');
     }
 
-    const token = authorizationHeader.slice('Bearer '.length).trim();
-    const payload = this.jwtService.verify(token, 'access');
-
-    request.user = {
-      id: payload.sub,
-      email: payload.email,
-      role: payload.role,
-    };
-
-    return true;
+    return user;
   }
 }

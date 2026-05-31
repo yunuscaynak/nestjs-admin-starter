@@ -33,7 +33,3 @@ export async function verifyPassword(
 
   return timingSafeEqual(derivedKey, storedBuffer);
 }
-
-export function encodeJwtSegment(value: unknown): string {
-  return Buffer.from(JSON.stringify(value)).toString('base64url');
-}
