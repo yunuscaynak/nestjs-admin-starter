@@ -3,7 +3,7 @@ SHELL := /bin/bash
 PNPM ?= pnpm
 
 BACKEND_PORT ?= 3002
-FRONTEND_PORT ?= 3001
+FRONTEND_PORT ?= 3000
 
 .DEFAULT_GOAL := help
 
