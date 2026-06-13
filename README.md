@@ -112,7 +112,8 @@ The repository now uses a single `pnpm` workspace and a shared root lockfile.
 ## Git Hooks and CI
 
 - `pnpm install` runs `husky` setup automatically.
-- `.husky/pre-commit` runs `pnpm lint` and `pnpm test`.
+- `.husky/pre-commit` runs `pnpm lint`.
+- `.husky/pre-push` runs `pnpm test`.
 - GitHub Actions CI runs install, Prisma client generation, lint, test, and build on every push and pull request.
 
 ## Backend Scripts
