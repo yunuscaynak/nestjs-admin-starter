@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiForbiddenResponse,
   ApiConflictResponse,
   ApiCreatedResponse,
   ApiOkResponse,
@@ -15,6 +16,7 @@ import { CurrentUser } from './decorators/current-user.decorator';
 import { Public } from './decorators/public.decorator';
 import type { AuthenticatedUser } from './auth.types';
 import { AuthResponseDto } from './dto/auth-response.dto';
+import { BootstrapAdminDto } from './dto/bootstrap-admin.dto';
 import { LoginDto } from './dto/login.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -96,6 +98,32 @@ export class AuthController {
   @Post('logout')
   logout(@Body() refreshTokenDto: RefreshTokenDto): Promise<{ success: true }> {
     return this.authService.logout(refreshTokenDto);
+  }
+
+  @ApiBearerAuth('bearer')
+  @ApiOperation({
+    summary: 'Ilk admini olustur',
+    description:
+      'Sistemde hic admin yoksa, giris yapmis kullaniciyi sifre dogrulamasi ile admin rolune yukselterek yeni token ciftini dondurur.',
+  })
+  @ApiOkResponse({
+    description: 'Kullanici admin rolune yukseltilip yeni oturum olusturuldu.',
+    type: AuthResponseDto,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Bearer token eksik/gecersiz veya sifre dogrulanamadi.',
+    type: HttpErrorResponseDto,
+  })
+  @ApiForbiddenResponse({
+    description: 'Sistemde zaten bir admin bulunuyor.',
+    type: HttpErrorResponseDto,
+  })
+  @Post('bootstrap-admin')
+  bootstrapAdmin(
+    @CurrentUser() user: AuthenticatedUser,
+    @Body() bootstrapAdminDto: BootstrapAdminDto,
+  ): Promise<AuthResponse> {
+    return this.authService.bootstrapAdmin(user, bootstrapAdminDto);
   }
 
   @ApiBearerAuth('bearer')

@@ -1,5 +1,6 @@
 import {
   ConflictException,
+  ForbiddenException,
   Injectable,
   UnauthorizedException,
 } from '@nestjs/common';
@@ -13,12 +14,13 @@ import {
   REFRESH_TOKEN_REMEMBER_ME_EXPIRES_IN_SECONDS,
 } from './auth.constants';
 import { PrismaService } from '../prisma/prisma.service';
-import { JwtPayload } from './auth.types';
+import { AuthenticatedUser, JwtPayload } from './auth.types';
 import {
   PUBLIC_USER_SELECT,
   type PublicUserRecord,
 } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
+import { BootstrapAdminDto } from './dto/bootstrap-admin.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RegisterDto } from './dto/register.dto';
 import { hashPassword, verifyPassword } from './auth.utils';
@@ -98,6 +100,45 @@ export class AuthService {
     }
 
     return this.createSession(user, loginDto.rememberMe ?? false);
+  }
+
+  async bootstrapAdmin(
+    currentUser: AuthenticatedUser,
+    { password }: BootstrapAdminDto,
+  ): Promise<AuthResponse> {
+    const adminCount = await this.prisma.user.count({
+      where: { role: Role.ADMIN },
+    });
+
+    if (adminCount > 0) {
+      throw new ForbiddenException('Sistemde zaten bir admin kullanicisi var.');
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: currentUser.id },
+      select: {
+        ...PUBLIC_USER_SELECT,
+        passwordHash: true,
+      },
+    });
+
+    if (!user) {
+      throw new UnauthorizedException('Kullanici bulunamadi.');
+    }
+
+    const isPasswordValid = await verifyPassword(password, user.passwordHash);
+
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('E-posta veya sifre hatali.');
+    }
+
+    const promotedUser = await this.prisma.user.update({
+      where: { id: currentUser.id },
+      data: { role: Role.ADMIN },
+      select: PUBLIC_USER_SELECT,
+    });
+
+    return this.createSession(promotedUser, currentUser.rememberMe);
   }
 
   async refresh({ refreshToken }: RefreshTokenDto): Promise<AuthResponse> {
@@ -219,14 +260,24 @@ export class AuthService {
       },
     });
 
+    const publicUser: PublicUserRecord = {
+      id: user.id,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+
     return {
       accessToken,
       refreshToken,
       accessTokenExpiresAt: accessTokenExpiresAt.toISOString(),
       refreshTokenExpiresAt: refreshTokenExpiresAt.toISOString(),
       rememberMe,
-      role: user.role,
-      user,
+      role: publicUser.role,
+      user: publicUser,
     };
   }
 
