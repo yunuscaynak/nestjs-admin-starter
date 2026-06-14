@@ -23,7 +23,7 @@ export class CreatePostDto {
   @IsNotEmpty()
   @MinLength(3)
   @MaxLength(160)
-  title: string;
+  title!: string;
 
   @ApiProperty({
     example: 'Bu yazi service-controller-module katmanlarini acikliyor.',
@@ -38,7 +38,7 @@ export class CreatePostDto {
   @IsNotEmpty()
   @MinLength(10)
   @MaxLength(5000)
-  content: string;
+  content!: string;
 
   @ApiProperty({
     example: false,
@@ -58,5 +58,5 @@ export class CreatePostDto {
   )
   @IsString()
   @IsNotEmpty()
-  authorId: string;
+  authorId!: string;
 }
