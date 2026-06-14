@@ -25,7 +25,7 @@ export class CreateUserDto {
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(80)
-  firstName: string;
+  firstName!: string;
 
   @ApiProperty({
     example: 'Çaynak',
@@ -40,7 +40,7 @@ export class CreateUserDto {
   @IsNotEmpty()
   @MinLength(2)
   @MaxLength(80)
-  lastName: string;
+  lastName!: string;
 
   @ApiProperty({
     example: 'yunus@example.com',
@@ -53,7 +53,7 @@ export class CreateUserDto {
   @IsNotEmpty()
   @MaxLength(254)
   @IsEmail()
-  email: string;
+  email!: string;
 
   @ApiProperty({
     example: 'Admin123!',
@@ -64,7 +64,7 @@ export class CreateUserDto {
   @IsNotEmpty()
   @MinLength(8)
   @MaxLength(128)
-  password: string;
+  password!: string;
 
   @ApiProperty({
     enum: Role,
